@@ -178,7 +178,7 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
 .tile.wearing .tp { color: var(--green); }
 
 /* tab bar */
-.tabbar { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--sheet); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 6px) max(8px, env(safe-area-inset-left, 0px)); }
+.tabbar { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--sheet); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 6px) max(8px, env(safe-area-inset-left, 0px)); }
 .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; font: 800 .75rem/1 var(--display); color: var(--muted); padding: 2px 0; position: relative; }
 .ticon { width: 56px; height: 30px; border-radius: 15px; display: grid; place-items: center; transition: background-color .2s; }
 .ticon svg { width: 24px; height: 24px; }
@@ -262,6 +262,51 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
   .meter { padding-block: 3px; }
 }
 
+/* progress tab */
+.lvl { background: #fff; border-radius: 18px; padding: 14px; box-shadow: 0 2px 10px rgba(58, 36, 22, .07); display: flex; flex-direction: column; gap: 6px; }
+.lvl-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.lvl-top b { font: 800 1.6rem/1 var(--display); }
+.lvl-top span, .lvl small { font-size: .82rem; color: var(--muted); }
+.xpbar { height: 10px; border-radius: 99px; background: var(--soft); overflow: hidden; }
+.xpbar i { display: block; height: 100%; background: var(--banana); border-radius: 99px; }
+.sect { margin: 14px 0 6px; font: 800 1.05rem var(--display); display: flex; justify-content: space-between; align-items: baseline; }
+.sect span { font: 600 .8rem var(--body); color: var(--muted); }
+.quest { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; background: #fff; border-radius: 16px; padding: 10px 12px; box-shadow: 0 2px 10px rgba(58, 36, 22, .07); margin-bottom: 8px; }
+.quest b { font-weight: 800; font-size: .95rem; }
+.quest .qbar { grid-column: 1; height: 6px; border-radius: 99px; background: var(--soft); overflow: hidden; }
+.quest .qbar i { display: block; height: 100%; background: var(--green); border-radius: 99px; }
+.quest .qr { grid-row: 1 / 3; grid-column: 2; font: 800 .85rem var(--display); color: var(--muted); display: inline-flex; gap: 3px; align-items: center; }
+.quest .claim { background: var(--banana); padding: 7px 12px 5px; font-size: .9rem; box-shadow: 0 3px 0 var(--banana-d); }
+.quest.claimed { opacity: .55; }
+.week { background: #fff; border-radius: 18px; padding: 12px 12px 8px; box-shadow: 0 2px 10px rgba(58, 36, 22, .07); }
+.week svg { display: block; width: 100%; height: auto; }
+.week .wsum { font-size: .85rem; color: var(--muted); margin: 0 0 6px; }
+.week .wsum b { color: var(--ink); }
+.week .wtip { font-size: .8rem; color: var(--muted); text-align: center; min-height: 1.2em; margin: 4px 0 0; }
+.wbar { cursor: pointer; }
+.pickstage { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); bottom: 40px; background: var(--green); color: #fff; padding: 9px 14px 7px; border-radius: 999px; box-shadow: 0 3px 0 var(--green-d); font: 800 .95rem var(--display); white-space: nowrap; }
+.pickstage:active { box-shadow: 0 1px 0 var(--green-d); }
+.lvlin { font: 800 .78rem var(--display); color: var(--ink); padding-left: 4px; white-space: nowrap; }
+.focus:not([hidden]) ~ .toast { top: calc(env(safe-area-inset-top, 0px) + 12px); bottom: auto; }
+.sheet { overflow: hidden; }
+@media (max-width: 380px) { .trick, .feed, .pickstage { font-size: .85rem; padding: 8px 10px 6px; } }
+.pickchip { background: var(--soft); padding: 8px 14px 6px; border-radius: 999px; font: 800 .9rem var(--display); box-shadow: none; display: inline-flex; gap: 6px; align-items: center; }
+.pickbtn { background: var(--green); color: #fff; padding: 9px 12px 7px; font-size: .9rem; box-shadow: 0 3px 0 var(--green-d); white-space: nowrap; }
+.phead > div { min-width: 0; }
+.phead > div span { display: block; margin-top: 4px; text-align: left; }
+.bell { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-weight: 800; font-size: .78rem; padding: 2px 6px; border-radius: 8px; background: var(--soft); }
+.bell svg { width: 13px; height: 13px; }
+.bell.on { color: var(--ink); background: #fff1c4; }
+.timein { font: 700 .85rem var(--body); padding: 2px 6px; border: 2px solid var(--line); border-radius: 8px; color: var(--ink); background: #fff; }
+.trick { position: absolute; z-index: 2; left: max(14px, env(safe-area-inset-left, 0px)); bottom: 40px; background: rgba(255, 253, 248, .95); padding: 9px 12px 7px; font-size: .95rem; border-radius: 999px; display: inline-flex; gap: 5px; align-items: center; }
+.lvlchip { font: 800 .78rem var(--display); padding: 4px 10px 3px; }
+.ntfybox { background: var(--soft); border-radius: 14px; padding: 12px; font-size: .88rem; display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
+.ntfybox ol { margin: 0; padding-left: 1.2em; }
+.ntfybox p { margin: 0; color: var(--muted); }
+.ntfybox .links { display: flex; gap: 16px; }
+.rowbtns { display: inline-flex; gap: 16px; }
+.fsound { background: rgba(255, 255, 255, .14); color: #fff; padding: 7px 14px 5px; border-radius: 999px; font: 800 .85rem var(--display); }
+
 /* pop-out window */
 body.pip { background: #bdeccf; }
 body.pip .stage { position: fixed; inset: 0; }
@@ -287,6 +332,7 @@ body.pip .bubble { top: 60px; }
       <div class="hud-l">
         <div id="namebar"></div>
         <div class="chip meter" title="Happiness">
+          <b class="lvlin" id="lvl-chip"></b>
           <span id="m-heart" aria-hidden="true"></span>
           <div class="mbar" id="m-bar" role="meter" aria-label="Happiness" aria-valuemin="0" aria-valuemax="100"><i id="m-fill"></i></div>
           <span id="m-num"></span><span class="sr" id="m-word"></span>
@@ -305,6 +351,8 @@ body.pip .bubble { top: 60px; }
       <div class="what" id="try-what"></div>
       <button class="chunky act" id="try-act"></button>
     </div>
+    <button class="trick chunky" id="trick-btn" type="button">Trick!</button>
+    <button class="pickstage" id="pick-btn" type="button">Pick a task for me</button>
     <button class="feed" id="feed" type="button" aria-label="Feed one banana"><svg class="bico"><use href="#banana"/></svg>Feed</button>
   </section>
 
@@ -312,7 +360,7 @@ body.pip .bubble { top: 60px; }
     <div class="panel" id="p-home" role="tabpanel" aria-labelledby="tab-home">
       <div class="keybox" id="keybox" hidden>
         <b>Download Bongo's brain</b>
-        <span id="brain-msg">One time, about 700 MB, so use Wi-Fi. It's free, runs on your device, and your chats never leave it.</span>
+        <span id="brain-msg">Free and private. One-time 700 MB download, so use Wi-Fi.</span>
         <div class="brainbar" id="brain-bar" hidden><i id="brain-fill"></i></div>
         <div class="keyrow"><button class="chunky" id="key-save" type="button">Download</button></div>
       </div>
@@ -327,10 +375,14 @@ body.pip .bubble { top: 60px; }
     </div>
 
     <div class="panel" id="p-todo" role="tabpanel" aria-labelledby="tab-todo" hidden>
-      <div class="phead"><h2>Today</h2><span id="stats"></span></div>
+      <div class="phead"><div><h2>Today</h2><span id="stats"></span></div><button class="chunky pickbtn" id="pick-btn2" type="button">Pick for me</button></div>
       <div class="exbar" id="example-bar" hidden><span>These are examples.</span><button class="link" id="clear-examples" type="button">Clear</button></div>
       <div class="scroll"><ul class="tasks" id="tasks"></ul></div>
       <form class="quickadd" id="quickadd"><input id="qa-input" placeholder="Add a task…" aria-label="New task" autocomplete="off"><button class="chunky" type="submit">Add</button></form>
+    </div>
+
+    <div class="panel" id="p-prog" role="tabpanel" aria-labelledby="tab-prog" hidden>
+      <div class="scroll" id="prog"></div>
     </div>
 
     <div class="panel" id="p-shop" role="tabpanel" aria-labelledby="tab-shop" hidden>
@@ -342,6 +394,7 @@ body.pip .bubble { top: 60px; }
   <nav class="tabbar" role="tablist">
     <button class="tab" role="tab" id="tab-home" aria-selected="true" aria-controls="p-home"><span class="ticon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="5" cy="11" r="2.6"/><circle cx="19" cy="11" r="2.6"/><circle cx="12" cy="12" r="7.5" fill="currentColor" fill-opacity=".12"/><circle cx="9.5" cy="11" r=".9" fill="currentColor"/><circle cx="14.5" cy="11" r=".9" fill="currentColor"/><path d="M9.8 14.6q2.2 1.8 4.4 0" stroke-linecap="round"/></svg></span>Bongo</button>
     <button class="tab" role="tab" id="tab-todo" aria-selected="false" aria-controls="p-todo"><span class="ticon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6.5h9M11 12.5h9M11 18.5h9"/></svg></span>Tasks<span class="badge" id="todo-badge"></span></button>
+    <button class="tab" role="tab" id="tab-prog" aria-selected="false" aria-controls="p-prog"><span class="ticon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="currentColor" fill-opacity=".12"/></svg></span>Progress<span class="badge" id="prog-badge"></span></button>
     <button class="tab" role="tab" id="tab-shop" aria-selected="false" aria-controls="p-shop"><span class="ticon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M8.5 3.5 3.5 6.5l2 4 2-1V20.5h9V9.5l2 1 2-4-5-3q-1.2 2-3.5 2t-3.5-2Z" fill="currentColor" fill-opacity=".12"/></svg></span>Shop</button>
   </nav>
 </div>
@@ -352,6 +405,14 @@ body.pip .bubble { top: 60px; }
     <h2 id="set-h">Settings</h2>
     <div class="row"><span>Talks out loud</span><button class="switch" id="voice-btn" type="button" aria-pressed="true" aria-label="Talks out loud"></button></div>
     <div class="row"><span>Hands-free<small>Mic turns back on after he answers</small></span><button class="switch" id="hands-btn" type="button" aria-pressed="false" aria-label="Hands-free"></button></div>
+    <div class="row"><span>Reminders when the app is closed<small id="ntfy-state">Off</small></span><button class="link" id="ntfy-btn" type="button">Set up</button></div>
+    <div class="ntfybox" id="ntfy-box" hidden>
+      <ol><li>Install the free <b>ntfy</b> app from the App Store.</li><li>Open it, tap <b>+</b>, and subscribe to this topic:</li></ol>
+      <div class="keyrow"><input id="ntfy-topic" readonly aria-label="Your ntfy topic"><button class="chunky" id="ntfy-copy" type="button">Copy</button></div>
+      <p>Done. Reminders you set will pop up on your phone even when Lock In is closed.</p>
+      <div class="links"><button class="link" id="ntfy-test" type="button">Send a test</button><button class="link" id="ntfy-off" type="button">Turn off</button></div>
+    </div>
+    <div class="row"><span>Move to another device<small>Copy here, then Paste on your other device</small></span><span class="rowbtns"><button class="link" id="sync-copy" type="button">Copy</button><button class="link" id="sync-paste" type="button">Paste</button></span></div>
     <div class="row"><span>Conversation</span><button class="link" id="newchat-btn" type="button">Start fresh</button></div>
     <div class="row" id="list-tools"><span>Task list</span><button class="link" id="clear-all" type="button">Clear everything</button></div>
     <div class="row"><span>Bongo's brain<small id="brain-state">Not downloaded</small></span><button class="link" id="key-change" type="button">Download</button></div>
@@ -365,7 +426,7 @@ body.pip .bubble { top: 60px; }
 </div>
 
 <div class="focus" id="focus" hidden role="dialog" aria-modal="true" aria-labelledby="ftitle">
-  <div class="eyebrow">Locked in</div>
+  <div class="eyebrow" id="f-eyebrow">Locked in</div>
   <div class="fstage">
     <div id="fscene"></div>
     <div class="bubble" id="fbubble"></div>
@@ -374,17 +435,22 @@ body.pip .bubble { top: 60px; }
   <p class="fstep" id="fstep"></p>
   <div class="clock" id="clock">00:00</div>
   <div class="earned"><svg class="bico"><use href="#banana"/></svg><span id="fearned">+0 so far</span></div>
-  <div class="factions">
+  <div class="factions" id="f-work">
     <button class="chunky fdone" id="f-done">I did it!</button>
     <button class="chunky" id="f-more">+5 min</button>
-    <button class="chunky" id="f-stop">Break</button>
+    <button class="chunky" id="f-stop">Stop</button>
     <button class="chunky" id="f-pip" type="button" hidden>Pop out</button>
   </div>
+  <div class="factions" id="f-break" hidden>
+    <button class="chunky fdone" id="b-next">Next task</button>
+    <button class="chunky" id="b-done">Done for now</button>
+  </div>
+  <button class="fsound" id="f-sound" type="button">Sound: Off</button>
 </div>
 
 <script>
 // Auto-update: if the site has a newer version than this saved copy, reload once to get it.
-const APP_VERSION = "7";
+const APP_VERSION = "8";
 (async () => {
   try {
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -524,12 +590,14 @@ const APP_VERSION = "7";
     if (eq.hat && HATS[eq.hat]) h += HATS[eq.hat]();
     s += part("head", 100, 142, h);
     if (eq.neck && NECK[eq.neck]) s += NECK[eq.neck]();
+    // his laptop when he's working with you
+    if (mood === "focus") s += `<rect x="74" y="166" width="52" height="32" rx="4" fill="#5a5f7a" ${S}/><use href="#banana" x="91" y="173" width="18" height="18"/><path d="M66 198H134L140 206H60Z" fill="#c9c6dd" ${S}/>`;
     // arms last, so a raised arm (waving, eating) draws in front of his head
     const arm = (side, d, sleeve, hx) => part(side, side === "armL" ? 68 : 132, 148,
       thick(d, f.fur, 13) + (sh ? thick(sleeve, sh.sleeve, 15) : "") + `<circle cx="${hx}" cy="192" r="9" fill="${f.face}" ${S}/>`
       + (side === "armR" && mood === "eat" ? `<use href="#banana" x="128" y="176" width="34" height="34"/>` : ""));
     s += arm("armL", armL, "M68 148Q61 155 59 163", 54) + arm("armR", armR, "M132 148Q139 155 141 163", 146);
-    return `<defs><clipPath id="${uid}"><ellipse cx="100" cy="172" rx="44" ry="42"/></clipPath></defs><g class="m-bob${mood === "pet" ? " m-wiggle" : ""}" data-mood="${mood}">${s}</g>`;
+    return `<defs><clipPath id="${uid}"><ellipse cx="100" cy="172" rx="44" ry="42"/></clipPath></defs><g class="m-bob${mood === "pet" ? " m-wiggle" : ""}" data-mood="${mood}"><g data-p="body">${s}</g></g>`;
   }
   const SKY = { jungle: ["#bdeccf", "#7cc47f"], beach: ["#aee4ff", "#f6d68f"], bedroom: ["#ffe0ea", "#e8b98a"], space: ["#23265e", "#c9c6dd"] };
   const scene = (eq, mood, o = {}) =>
@@ -546,10 +614,11 @@ const APP_VERSION = "7";
     wow: t => ({ armL: 112 + 26 * sin(t * 9), armR: -112 - 26 * sin(t * 9 + 1), head: 5 * sin(t * 4), tail: 22 * sin(t * 4), earL: -8, earR: 8 }),
     pet: t => ({ armL: -22 + 7 * sin(t * 12), armR: 22 - 7 * sin(t * 12), head: 10 + 3 * sin(t * 6), tail: 28 * sin(t * 7), earL: 10, earR: -10 }),
     eat: t => ({ armL: 10, armR: 152 + 7 * sin(t * 14), head: -5 + 2 * sin(t * 14), tail: 14 * sin(t * 3) }),
+    stretch: t => ({ armL: 125 + 15 * sin(t * 1.5), armR: -125 - 15 * sin(t * 1.5 + .5), head: 6 * sin(t), tail: 10 * sin(t), earL: -4, earR: 4 }),
     focus: t => ({ armL: -30 + 9 * sin(t * 13), armR: 30 + 9 * sin(t * 13 + Math.PI), head: 2 * sin(t * 1.2), tail: 6 * sin(t), earL: -twitch(t, 1), earR: twitch(t, 3) }),
   };
   const rigNow = {};
-  let waveUntil = 0;
+  let waveUntil = 0, trick = null;
   function wave(ms = 2400) { waveUntil = performance.now() + ms; }
   function rigFrame(now) {
     const t = now / 1000;
@@ -559,11 +628,21 @@ const APP_VERSION = "7";
       const pose = (RIG[mb.dataset.mood] || RIG.happy)(t);
       if (box.closest(".walking")) {
         Object.assign(pose, { armL: 20 * sin(t * 11), armR: 20 * sin(t * 11), legL: -7 * Math.max(0, sin(t * 11)), legR: -7 * Math.max(0, sin(t * 11 + Math.PI)), tail: 18 * sin(t * 5.5) });
+      } else if (id === "scene" && trick && now < trick.start + trick.dur) {
+        const q = (now - trick.start) / trick.dur;
+        const TP = {
+          dance: { armL: 90 + 40 * sin(t * 8), armR: -90 - 40 * sin(t * 8 + Math.PI), head: 10 * sin(t * 8), legL: -7 * Math.max(0, sin(t * 8)), legR: -7 * Math.max(0, sin(t * 8 + Math.PI)), tail: 25 * sin(t * 8), body: 7 * sin(t * 4) },
+          jump: { armL: 130, armR: -130, bodyY: -45 * abs(sin(q * Math.PI * 2)), legL: -5, legR: -5 },
+          spin: { armL: 80, armR: -80, body: 360 * q },
+          backflip: { armL: 140, armR: -140, legL: -6, legR: -6, bodyY: -70 * sin(q * Math.PI), body: -360 * q },
+        }[trick.name];
+        if (TP) Object.assign(pose, TP);
       } else if (id === "scene" && now < waveUntil) {
         pose.armR = -140 + 24 * sin(t * 13);
       }
       for (const el of box.querySelectorAll("[data-p]")) {
         const p = el.dataset.p, key = id + p, target = pose[p] || 0;
+        if (p === "body") { el.setAttribute("transform", `translate(0 ${(pose.bodyY || 0).toFixed(2)}) rotate(${(pose.body || 0).toFixed(2)} 100 150)`); continue; }
         const cur = rigNow[key] ?? 0, v = cur + (target - cur) * 0.3;
         rigNow[key] = v;
         el.setAttribute("transform", p === "legL" || p === "legR" ? `translate(0 ${v.toFixed(2)})` : `rotate(${v.toFixed(2)} ${el.dataset.cx} ${el.dataset.cy})`);
@@ -660,7 +739,7 @@ const APP_VERSION = "7";
       actions: { type: "array", items: { type: "object", properties: {
         type: { type: "string", enum: ["add", "update", "done", "delete", "start"] },
         id: { type: "string" }, title: { type: "string" }, minutes: { type: "integer" },
-        priority: { type: "string", enum: ["now", "soon", "later"] }, firstStep: { type: "string" }, start: { type: "boolean" },
+        priority: { type: "string", enum: ["now", "soon", "later"] }, firstStep: { type: "string" }, start: { type: "boolean" }, remindAt: { type: "string" },
       }, required: ["type"] } },
     },
     required: ["reply", "actions"],
@@ -842,14 +921,16 @@ const APP_VERSION = "7";
         const nt = { id: newId(), title: String(a.title).slice(0, 120), minutes: mins5(a.minutes), priority: PRIOS.includes(a.priority) ? a.priority : "soon", firstStep: a.firstStep ? String(a.firstStep).slice(0, 160) : "", done: false };
         state.tasks.push(nt); added++;
         if (a.start) startId = nt.id;
+        if (/^\d{1,2}:\d{2}$/.test(a.remindAt || "")) setReminder(nt, a.remindAt, true);
       } else if (a.type === "update" && t) {
         if (a.title) t.title = String(a.title).slice(0, 120);
         if (a.minutes) t.minutes = mins5(a.minutes);
         if (PRIOS.includes(a.priority)) t.priority = a.priority;
         if (a.firstStep) t.firstStep = String(a.firstStep).slice(0, 160);
+        if (/^\d{1,2}:\d{2}$/.test(a.remindAt || "")) setReminder(t, a.remindAt, true);
       } else if (a.type === "done" && t && !t.done) {
         t.done = true; done++;
-        if (!t.paid) { t.paid = true; addBananas(3); addHappy(3); }
+        if (!t.paid) { t.paid = true; addBananas(3); addHappy(3); track("finished"); }
         state.tasks = state.tasks.filter(x => x !== t);
       } else if (a.type === "delete" && t) {
         state.tasks = state.tasks.filter(x => x !== t);
@@ -887,6 +968,7 @@ How you help:
 - If they say they're ready, or say "let's do X" or "start a timer", start a Lock In timer on that task.
 - If they say they finished something, mark it done and cheer briefly.
 - If they want to change or remove something, do it.
+- If they mention a time for something ("at 3", "at 5pm", "remind me at 7"), add "remindAt":"HH:MM" (24-hour clock) to that add or update action.
 - If they're just chatting or venting, be kind and brief, then gently steer back to one small next step.
 
 Right now: ${new Date().toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" })}. They have ${state.bananas} bananas. Your happiness is ${Math.round(happy())}%.
@@ -955,7 +1037,7 @@ Possible actions (use [] if nothing changes):
       check.onclick = () => {
         if (t.done) return;
         t.done = true;
-        if (!t.paid && !t.example) { t.paid = true; addBananas(3); addHappy(3); toast(`${BAN} +3 for checking it off`); }
+        if (!t.paid && !t.example) { t.paid = true; addBananas(3); addHappy(3); toast(`${BAN} +3 for checking it off`); track("finished"); }
         say(pick(["Yesss! One down.", "Look at you go!", "Checked! Proud of you."]));
         li.classList.add("is-done", "poof");
         check.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
@@ -972,7 +1054,21 @@ Possible actions (use [] if nothing changes):
       minus.onclick = () => { t.minutes = Math.max(5, t.minutes - 5); persist(); renderTasks(); };
       plus.onclick = () => { t.minutes += 5; persist(); renderTasks(); };
       mins.append(minus, el("span", null, "~" + fmt(t.minutes)), plus);
-      meta.append(mins); body.append(meta);
+      meta.append(mins);
+      if (!t.done) {
+        const bell = el("button", "bell" + (t.remindAt ? " on" : "")); bell.type = "button";
+        bell.innerHTML = BELL + (t.remindAt ? `<span>${fmtTime(t.remindAt)}</span>` : "");
+        bell.setAttribute("aria-label", t.remindAt ? `Reminder at ${fmtTime(t.remindAt)}. Change it` : "Set a reminder");
+        bell.onclick = () => {
+          const inp = document.createElement("input"); inp.type = "time"; inp.className = "timein"; inp.setAttribute("aria-label", "Reminder time");
+          if (t.remindAt) { const d = new Date(t.remindAt); inp.value = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+          bell.replaceWith(inp); inp.focus(); try { inp.showPicker?.(); } catch {}
+          inp.onchange = () => setReminder(t, inp.value);
+          inp.onblur = () => setTimeout(renderTasks, 400);
+        };
+        meta.append(bell);
+      }
+      body.append(meta);
       const acts = el("div", "tactions");
       if (!t.done) { const go = el("button", "chunky go"); go.textContent = "Lock in"; go.onclick = () => startFocus(t); acts.append(go); }
       const del = el("button", "del", "Remove");
@@ -982,6 +1078,154 @@ Possible actions (use [] if nothing changes):
       ul.append(li);
     }
   }
+
+  // =================== PROGRESS: history, quests, levels ===================
+  function dayStats(d = today()) { state.history = state.history || {}; return (state.history[d] = state.history[d] || { min: 0, done: 0 }); }
+  function daily() {
+    if (!state.daily || state.daily.day !== today()) state.daily = { day: today(), lockins: 0, minutes: 0, finished: 0, pets: 0, beat: 0, fed: 0, claimed: [] };
+    return state.daily;
+  }
+  const xp = () => (state.minutes || 0) + 5 * (state.finishedTotal || 0);
+  const levelAt = (x) => { let L = 1; while (x >= 15 * L * (L + 1)) L++; return L; };   // L2 at 30, L3 at 90, L4 at 180, L5 at 300…
+  const level = () => levelAt(xp());
+  const levelFloor = (L) => 15 * (L - 1) * L;
+  const TRICKS = [["wave", 1, "Wave"], ["dance", 2, "Dance"], ["jump", 3, "Jump"], ["spin", 4, "Spin"], ["backflip", 5, "Backflip"]];
+  function checkLevel() {
+    const L = level();
+    if (L > (state.level || 1)) {
+      state.level = L; persist();
+      rain(30); chime([523, 659, 784, 1046, 1318]);
+      const tr = TRICKS.find(([, lv]) => lv === L);
+      toast(`Level ${L}!`);
+      say(tr ? `LEVEL ${L}! I learned a new trick: ${tr[2]}! Tap Trick! to see it.` : `LEVEL ${L}! I'm getting so strong.`);
+    }
+    renderLevelChip();
+  }
+  function renderLevelChip() { $("lvl-chip").textContent = "Lv " + level(); }
+  const QUESTS = [
+    { id: "lock3", text: () => "Lock in 3 times", key: "lockins", n: 3, reward: 15 },
+    { id: "min30", text: () => "Lock in for 30 minutes", key: "minutes", n: 30, reward: 15 },
+    { id: "min15", text: () => "Lock in for 15 minutes", key: "minutes", n: 15, reward: 8 },
+    { id: "fin2", text: () => "Finish 2 tasks", key: "finished", n: 2, reward: 12 },
+    { id: "fin1", text: () => "Finish a task", key: "finished", n: 1, reward: 6 },
+    { id: "beat", text: () => "Beat the timer once", key: "beat", n: 1, reward: 10 },
+    { id: "pet", text: () => `Pet ${state.name} 10 times`, key: "pets", n: 10, reward: 5 },
+    { id: "feed", text: () => `Feed ${state.name}`, key: "fed", n: 1, reward: 4 },
+  ];
+  function todaysQuests() {
+    let seed = [...today()].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7);
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) | 0) >>> 0) / 4294967296;
+    const pool = QUESTS.slice().sort(() => rnd() - 0.5), out = [], keys = new Set();
+    for (const q of pool) { if (!keys.has(q.key)) { out.push(q); keys.add(q.key); } if (out.length === 3) break; }
+    return out;
+  }
+  function questsReady() { const d = daily(); return todaysQuests().filter(q => (d[q.key] || 0) >= q.n && !d.claimed.includes(q.id)).length; }
+  function track(k, n = 1) {
+    const d = daily(); d[k] = (d[k] || 0) + n;
+    const h = dayStats();
+    if (k === "minutes") h.min += n;
+    if (k === "finished") { h.done += n; state.finishedTotal = (state.finishedTotal || 0) + n; }
+    if (k === "minutes" || k === "finished") checkLevel();
+    $("prog-badge").textContent = questsReady() || "";
+    if (tab === "prog") renderProgress();
+  }
+  const fmtMin = (m) => m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${m % 60}m`;
+  function renderProgress() {
+    const box = $("prog"); box.replaceChildren();
+    // level
+    const L = level(), x = xp(), lo = levelFloor(L), hi = levelFloor(L + 1), next = TRICKS.find(([, lv]) => lv > L);
+    const lv = el("div", "lvl");
+    lv.innerHTML = `<div class="lvl-top"><b>Level ${L}</b><span>${x - lo} / ${hi - lo} XP</span></div><div class="xpbar"><i style="width:${Math.round((x - lo) / (hi - lo) * 100)}%"></i></div>`;
+    lv.append(el("small", null, (next ? `Next trick at level ${next[1]}: ${next[2]}. ` : "") + "XP: 1 per minute locked in, 5 per task finished."));
+    box.append(lv);
+    // quests
+    const d = daily(), qh = el("div", "sect"); qh.append(document.createTextNode("Today's quests"), el("span", null, "New ones tomorrow"));
+    box.append(qh);
+    for (const q of todaysQuests()) {
+      const have = Math.min(q.n, d[q.key] || 0), done = have >= q.n, claimed = d.claimed.includes(q.id);
+      const row = el("div", "quest" + (claimed ? " claimed" : ""));
+      row.append(el("b", null, q.text()));
+      let right;
+      if (done && !claimed) {
+        right = el("button", "chunky claim"); right.innerHTML = `Claim ${BAN} ${q.reward}`;
+        right.onclick = () => { d.claimed.push(q.id); addBananas(q.reward); addHappy(5); rain(12); toast(`${BAN} +${q.reward} quest reward`); say(pick(["Quest complete! Look at you!", "Ooh, bonus bananas!"])); persist(); track("noop", 0); renderProgress(); };
+      } else { right = el("span", "qr"); right.innerHTML = claimed ? "Claimed" : `${BAN} ${q.reward}`; }
+      right.classList.add("qr");
+      row.append(right);
+      const bar = el("div", "qbar"); bar.innerHTML = `<i style="width:${Math.round(have / q.n * 100)}%"></i>`;
+      row.append(bar);
+      box.append(row);
+    }
+    // this week vs last week
+    const days = [];
+    for (let i = 13; i >= 0; i--) { const dt = new Date(Date.now() - i * 864e5); const k = dt.toLocaleDateString("en-CA"); days.push({ k, dt, ...(state.history?.[k] || { min: 0, done: 0 }) }); }
+    const prev = days.slice(0, 7), week = days.slice(7);
+    const sum = (a) => a.reduce((s, x) => s + x.min, 0), tw = sum(week), lw = sum(prev);
+    const wh = el("div", "sect"); wh.append(document.createTextNode("This week")); box.append(wh);
+    const wk = el("div", "week");
+    const change = lw ? Math.round((tw - lw) / lw * 100) : null;
+    wk.innerHTML = `<p class="wsum"><b>${fmtMin(tw)}</b> locked in, ${week.reduce((s, x) => s + x.done, 0)} tasks done${change === null ? "" : ` · <b>${change >= 0 ? "up" : "down"} ${Math.abs(change)}%</b> from last week`}</p>`;
+    const max = Math.max(30, ...week.map(w => w.min)), W = 300, H = 130, base = 104, bw = 26, step = W / 7;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Minutes locked in, last 7 days: ${week.map(w => w.dt.toLocaleDateString([], { weekday: "short" }) + " " + w.min).join(", ")}">`;
+    svg += `<line x1="0" y1="${base}" x2="${W}" y2="${base}" stroke="#ece3d6" stroke-width="1"/>`;
+    week.forEach((w, i) => {
+      const x = i * step + (step - bw) / 2, h = w.min ? Math.max(4, (w.min / max) * 80) : 0, isToday = i === 6;
+      if (h) svg += `<path d="M${x} ${base}V${base - h + 4}q0 -4 4 -4h${bw - 8}q4 0 4 4V${base}Z" fill="${isToday ? "#2b8650" : "#3fae6a"}"/>`;
+      if (h && (isToday || w.min === Math.max(...week.map(v => v.min)))) svg += `<text x="${x + bw / 2}" y="${base - h - 5}" text-anchor="middle" font-size="11" font-weight="800" fill="#3a2416" font-family="Nunito, sans-serif">${w.min}m</text>`;
+      svg += `<text x="${x + bw / 2}" y="${base + 16}" text-anchor="middle" font-size="11" font-weight="700" fill="${isToday ? "#3a2416" : "#8a7666"}" font-family="Nunito, sans-serif">${isToday ? "Today" : w.dt.toLocaleDateString([], { weekday: "narrow" })}</text>`;
+      svg += `<rect class="wbar" data-i="${i}" x="${i * step}" y="0" width="${step}" height="${H}" fill="transparent"/>`;
+    });
+    wk.innerHTML += svg + `</svg><p class="wtip" id="wtip">Tap a day to see it</p>`;
+    wk.addEventListener("click", (e) => {
+      const r = e.target.closest(".wbar"); if (!r) return;
+      const w = week[+r.dataset.i];
+      $("wtip").textContent = `${w.dt.toLocaleDateString([], { weekday: "long" })}: ${fmtMin(w.min)} locked in, ${w.done} task${w.done === 1 ? "" : "s"} done`;
+    });
+    box.append(wk);
+  }
+
+  // =================== REMINDERS ===================
+  const fmtTime = (ts) => new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20.5a2 2 0 0 0 4 0"/></svg>';
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  async function askNotify() { try { if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission(); } catch {} }
+  async function notify(body) {
+    try {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+      if (reg) reg.showNotification(state.name, { body, icon: "icon.png", tag: "lockin-" + Date.now() });
+      else new Notification(state.name, { body, icon: "icon.png" });
+    } catch {}
+  }
+  const ascii = (t) => String(t).replace(/[^\x20-\x7e]/g, "");
+  function ntfyPost(body, atMs) {
+    if (!state.ntfy) return Promise.resolve();
+    const headers = { "Title": ascii(`${state.name} says`) || "Lock In", "Tags": "monkey", "Click": location.origin + location.pathname };
+    if (atMs) headers["At"] = String(Math.round(atMs / 1000));
+    return fetch("https://ntfy.sh/" + state.ntfy, { method: "POST", body, headers }).catch(() => {});
+  }
+  function setReminder(t, hhmm, quiet) {
+    if (!hhmm) { delete t.remindAt; persist(); renderTasks(); return; }
+    const [h, m] = hhmm.split(":").map(Number);
+    const d = new Date(); d.setHours(h, m, 0, 0);
+    if (d.getTime() <= Date.now() + 30000) d.setDate(d.getDate() + 1);
+    t.remindAt = d.getTime(); t.reminded = false;
+    ntfyPost(`Time for: ${t.title}`, t.remindAt);
+    if (!quiet) { askNotify(); persist(); renderTasks(); say(`Okay! I'll remind you at ${fmtTime(t.remindAt)}.`); }
+  }
+  function checkReminders() {
+    let changed = false;
+    for (const t of state.tasks) {
+      if (t.remindAt && !t.reminded && Date.now() >= t.remindAt) {
+        t.reminded = true; changed = true;
+        notify(`Time for: ${t.title}`);
+        chime([880, 660, 880]); wave();
+        say(`Hey! It's time for "${t.title}". Wanna lock in?`);
+      }
+    }
+    if (changed) { persist(); renderTasks(); }
+  }
+  setInterval(checkReminders, 15000);
 
   // =================== RENDER: STAGE + SHOP ===================
   let tab = "home", shopCat = "hat", selected = null, editingName = false, walkX = 0, playToy = null;
@@ -1086,20 +1330,22 @@ Possible actions (use [] if nothing changes):
 
   function setTab(t) {
     tab = t; selected = null;
-    for (const k of ["home", "todo", "shop"]) {
+    for (const k of ["home", "todo", "prog", "shop"]) {
       $("tab-" + k).setAttribute("aria-selected", String(t === k));
       $("p-" + k).hidden = t !== k;
     }
-    $("feed").hidden = t === "shop";
+    $("feed").hidden = $("trick-btn").hidden = $("pick-btn").hidden = t === "shop";
+    if (t === "prog") renderProgress();
     if (t === "shop") { renderShop(); say(pick([`You have ${state.bananas} bananas. Spoil me?`, "Tap anything to try it on me!"])); } else greet();
     renderStage(); renderTry();
   }
   $("tab-home").onclick = () => setTab("home");
   $("tab-todo").onclick = () => setTab("todo");
   $("tab-shop").onclick = () => setTab("shop");
+  $("tab-prog").onclick = () => setTab("prog");
 
   // =================== FOCUS MODE ===================
-  let ft = null, startAt = 0, endAt = 0, paid = 0, tick = null, lineT = null, wake = null, beeped = false, audio = null, sessionEarned = 0;
+  let ft = null, startAt = 0, endAt = 0, paid = 0, tick = null, lineT = null, wake = null, beeped = false, audio = null, sessionEarned = 0, fmode = "work";
 
   function chime(notes) {
     try {
@@ -1113,7 +1359,39 @@ Possible actions (use [] if nothing changes):
     } catch {}
   }
 
+  // Background sounds while you work together (made live, no audio files)
+  const SOUNDS = ["off", "rain", "brown", "waves"], SOUND_NAMES = { off: "Off", rain: "Rain", brown: "Brown noise", waves: "Waves" };
+  let soundNodes = [];
+  function stopSound() { for (const n of soundNodes) { try { n.stop ? n.stop() : n.disconnect(); } catch {} } soundNodes = []; }
+  function playSound(kind) {
+    stopSound();
+    if (!kind || kind === "off") return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.();
+      const len = audio.sampleRate * 4, buf = audio.createBuffer(1, len, audio.sampleRate), d = buf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (kind === "rain") d[i] = w; else { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } }
+      const src = audio.createBufferSource(); src.buffer = buf; src.loop = true;
+      const filt = audio.createBiquadFilter(), gain = audio.createGain();
+      if (kind === "rain") { filt.type = "bandpass"; filt.frequency.value = 2500; filt.Q.value = 0.4; gain.gain.value = 0.12; }
+      else if (kind === "brown") { filt.type = "lowpass"; filt.frequency.value = 600; gain.gain.value = 0.6; }
+      else {
+        filt.type = "lowpass"; filt.frequency.value = 900; gain.gain.value = 0.35;
+        const lfo = audio.createOscillator(), depth = audio.createGain(); lfo.frequency.value = 0.12; depth.gain.value = 0.3;
+        lfo.connect(depth).connect(gain.gain); lfo.start(); soundNodes.push(lfo);
+      }
+      src.connect(filt).connect(gain).connect(audio.destination); src.start();
+      soundNodes.push(src, gain);
+    } catch {}
+  }
+  function renderSoundBtn() { $("f-sound").textContent = "Sound: " + SOUND_NAMES[state.sound || "off"]; }
+  $("f-sound").onclick = () => {
+    const i = SOUNDS.indexOf(state.sound || "off"); state.sound = SOUNDS[(i + 1) % SOUNDS.length];
+    persist(); renderSoundBtn(); if (fmode === "work") playSound(state.sound);
+  };
+
   function payMinutes() {
+    if (fmode !== "work") return;
     const mins = Math.floor((Date.now() - startAt) / 60000);
     if (mins > paid) {
       const n = mins - paid; paid = mins;
@@ -1124,36 +1402,62 @@ Possible actions (use [] if nothing changes):
         toast(`${BAN} +10 daily bonus. ${state.streak.count} day streak!`);
       }
       addBananas(n); addHappy(n); sessionEarned += n; state.minutes = (state.minutes || 0) + n;
+      track("minutes", n);
       $("fearned").textContent = `+${sessionEarned} so far`;
       persist();
     }
   }
   function updateClock() {
     const left = endAt - Date.now(), over = left < 0, s = Math.floor(Math.abs(left) / 1000);
-    $("clock").textContent = (over ? "+" : "") + String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+    const txt = (over && fmode === "work" ? "+" : "") + (over && fmode === "break" ? "00:00" : String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"));
+    $("clock").textContent = txt;
     $("clock").classList.toggle("over", over);
-    $("pipclock").textContent = $("clock").textContent; $("pipclock").hidden = false;
-    if (over && !beeped) { beeped = true; chime([660, 880, 660]); say(`Time's up! Finished? Or tap +5 min and keep going.`, "fbubble"); }
+    $("pipclock").textContent = (fmode === "break" ? "Break " : "") + txt; $("pipclock").hidden = false;
+    if (over && !beeped) {
+      beeped = true; chime([660, 880, 660]);
+      if (fmode === "work") say(`Time's up! Finished? Or tap +5 min and keep going.`, "fbubble");
+      else { say("Break's over! Ready for the next one?", "fbubble"); notify("Break's over! Ready for the next one?"); }
+    }
     payMinutes();
+  }
+  function setFocusMode(mode) {
+    fmode = mode;
+    $("f-work").hidden = mode !== "work"; $("f-break").hidden = mode !== "break";
+    $("f-sound").hidden = mode !== "work";
+    $("f-eyebrow").textContent = mode === "work" ? "Locked in" : "Break time";
   }
   async function startFocus(t) {
     ft = t; startAt = Date.now(); endAt = startAt + t.minutes * 60000; paid = 0; sessionEarned = 0; beeped = false;
+    setFocusMode("work");
     try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume?.(); } catch {}
     $("fscene").innerHTML = scene(state.eq, "focus");
     $("focus").classList.add("focusing");
     $("ftitle").textContent = t.title;
     $("fstep").textContent = t.firstStep ? "First: " + t.firstStep : "";
     $("fearned").textContent = "+0 so far";
-    say(t.firstStep ? `Okay! First: ${t.firstStep}. Go go go!` : "Okay, let's go! I'm locked in with you.", "fbubble");
+    say(t.firstStep ? `Okay! First: ${t.firstStep}. Go go go!` : "Okay, let's go! I'm working right next to you.", "fbubble");
     $("focus").hidden = false;
+    track("lockins");
+    renderSoundBtn(); playSound(state.sound);
     updateClock();
     clearInterval(tick); tick = setInterval(updateClock, 1000);
-    clearInterval(lineT); lineT = setInterval(() => { if (!beeped) say(pick(FOCUS_LINES), "fbubble"); }, 75000);
+    clearInterval(lineT); lineT = setInterval(() => { if (!beeped && fmode === "work") say(pick(FOCUS_LINES), "fbubble"); }, 75000);
     $("f-done").focus();
     try { wake = await navigator.wakeLock?.request("screen"); } catch {}
   }
+  function startBreak(earned) {
+    stopSound(); setFocusMode("break");
+    endAt = Date.now() + 5 * 60000; beeped = false;
+    $("fscene").innerHTML = scene(state.eq, "stretch");
+    $("ftitle").textContent = "Stand up, stretch, drink some water";
+    $("fstep").textContent = "Look away from the screen for a bit. I'll tell you when it's time.";
+    $("fearned").textContent = `+${earned} bananas earned`;
+    say(pick([`WE DID IT! +${earned} bananas! Now stretch with me.`, `Yesss! ${earned} bananas! Quick break, then the next one.`]), "fbubble");
+    updateClock();
+  }
   function endFocus() {
     clearInterval(tick); clearInterval(lineT); tick = lineT = null;
+    stopSound(); setFocusMode("work");
     $("focus").hidden = true; $("focus").classList.remove("focusing"); $("pipclock").hidden = true;
     try { wake?.release(); } catch {} wake = null;
   }
@@ -1163,20 +1467,22 @@ Possible actions (use [] if nothing changes):
     const elapsed = (Date.now() - startAt) / 60000;
     let bonus = 0, why = "";
     if (!ft.paid && !ft.example) {
-      if (elapsed >= 3) { bonus = 10; why = "finishing"; if (Date.now() < endAt) { bonus += 5; why = "finishing early"; } }
+      if (elapsed >= 3) { bonus = 10; why = "finishing"; if (Date.now() < endAt) { bonus += 5; why = "finishing early"; track("beat"); } }
       else { bonus = 3; why = "checking it off"; }
       ft.paid = true;
+      track("finished");
     }
     ft.done = true;
     state.tasks = state.tasks.filter(x => x !== ft);
     if (bonus) addBananas(bonus);
     addHappy(8);
     const total = sessionEarned + bonus;
-    persist(); endFocus(); renderTasks();
+    persist(); renderTasks();
     chime([523, 659, 784, 1046]); rain(22);
     toast(`${BAN} +${total} bananas${bonus ? " (incl. " + bonus + " for " + why + ")" : ""}`);
-    say(pick([`WE DID IT! +${total} bananas!`, `That's what locking in looks like. +${total} bananas!`, `Yesss! ${total} bananas for us. Wanna buy me something?`]));
+    say(pick([`WE DID IT! +${total} bananas!`, `That's what locking in looks like. +${total} bananas!`]));
     ft = null;
+    startBreak(total);
   };
   $("f-more").onclick = () => { if (Date.now() > endAt) endAt = Date.now(); endAt += 5 * 60000; beeped = false; say("5 more minutes. You've got this.", "fbubble"); updateClock(); };
   $("f-stop").onclick = () => {
@@ -1185,6 +1491,33 @@ Possible actions (use [] if nothing changes):
     say(pick(["Breaks are okay! Come back when you're ready.", "Good effort. That still counts.", "Rest a bit. I'll wait right here."]));
     ft = null;
   };
+  $("b-next").onclick = () => { endFocus(); pickOne(); };
+  $("b-done").onclick = () => { endFocus(); say(pick(["Nice work today. Come back whenever you're ready!", "Proud of you. I'll be right here."])); };
+
+  // "Pick a task for me": takes the decision away. Most urgent first, then the quickest.
+  const PRANK = { now: 0, soon: 1, later: 2 };
+  function pickOne() {
+    const open = state.tasks.filter(t => !t.done);
+    setTab("home");
+    if (!open.length) { say("Nothing on your list! Tell me what you need to do."); return; }
+    const t = open.slice().sort((a, b) => (PRANK[a.priority] ?? 1) - (PRANK[b.priority] ?? 1) || a.minutes - b.minutes)[0];
+    wave();
+    say(`Let's do "${t.title}". Just ${t.minutes} minutes. Starting in 3… 2… 1…`);
+    setTimeout(() => startFocus(t), 2400);
+  }
+  $("pick-btn").onclick = pickOne;
+  $("pick-btn2").onclick = pickOne;
+
+  // Tricks unlock as he levels up
+  $("trick-btn").onclick = () => {
+    const mine = TRICKS.filter(([, lv]) => level() >= lv);
+    state.trickIdx = ((state.trickIdx || 0) + 1) % mine.length;
+    const [name, , label] = mine[state.trickIdx];
+    if (name === "wave") { wave(); say(mine.length === 1 ? "Hiii! Level up and I'll learn more tricks." : "Hiii!"); return; }
+    trick = { name, start: performance.now(), dur: name === "dance" ? 3200 : 1300 };
+    say(pick({ dance: ["Watch my moves!", "Dance party!"], jump: ["Boing boing!"], spin: ["Wheee!"], backflip: ["Ta-daaa!"] }[name]));
+  };
+
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("focus").hidden) $("f-stop").click(); });
 
   // =================== MIC ===================
@@ -1242,10 +1575,41 @@ Possible actions (use [] if nothing changes):
     } catch {}
     try { localStorage.removeItem(BRAIN_LS); } catch {}
     renderBrainState();
-    $("key-save").textContent = "Download"; brainProgress("One time, about 700 MB, so use Wi-Fi. It's free, runs on your device, and your chats never leave it.", null);
+    $("key-save").textContent = "Download"; brainProgress("Free and private. One-time 700 MB download, so use Wi-Fi.", null);
     $("keybox").hidden = false;
   };
-  $("settings-btn").onclick = () => { $("settings").hidden = false; };
+  $("settings-btn").onclick = () => { $("settings").hidden = false; renderNtfy(); };
+  function renderNtfy() {
+    $("ntfy-state").textContent = state.ntfy ? "On, through the ntfy app" : "Off";
+    $("ntfy-btn").textContent = state.ntfy ? (($("ntfy-box").hidden) ? "Show" : "Hide") : "Set up";
+    $("ntfy-topic").value = state.ntfy || "";
+  }
+  $("ntfy-btn").onclick = () => {
+    if (!state.ntfy) { state.ntfy = "lockin-" + Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 8); persist(); $("ntfy-box").hidden = false; }
+    else $("ntfy-box").hidden = !$("ntfy-box").hidden;
+    renderNtfy();
+  };
+  $("ntfy-copy").onclick = () => { navigator.clipboard?.writeText(state.ntfy).then(() => toast("Copied!"), () => $("ntfy-topic").select()); };
+  $("ntfy-test").onclick = () => { ntfyPost(`Hi! It's ${state.name}. Reminders work!`).then(() => toast("Sent! Check the ntfy app.")); };
+  $("ntfy-off").onclick = () => { state.ntfy = ""; persist(); $("ntfy-box").hidden = true; renderNtfy(); };
+  $("sync-copy").onclick = () => {
+    const code = "LOCKIN:" + btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    const done = () => toast("Copied! Now tap Paste on your other device.");
+    if (navigator.clipboard) navigator.clipboard.writeText(code).then(done, () => window.prompt("Copy this code:", code));
+    else window.prompt("Copy this code:", code);
+  };
+  $("sync-paste").onclick = async () => {
+    let text = "";
+    try { text = await navigator.clipboard.readText(); } catch {}
+    if (!text || !text.startsWith("LOCKIN:")) text = window.prompt("Paste your Lock In code here:") || "";
+    if (!text.startsWith("LOCKIN:")) { toast("That's not a Lock In code."); return; }
+    let data;
+    try { data = JSON.parse(decodeURIComponent(escape(atob(text.slice(7).trim())))); } catch { toast("That code didn't work. Copy it again."); return; }
+    if (!window.confirm("Replace everything on this device with what you copied?")) return;
+    state = { ...fresh(), ...data, updatedAt: Date.now() };
+    persist(); renderAll(); $("settings").hidden = true;
+    toast("Synced!"); say("Hi again! I'm all caught up.");
+  };
   $("settings-done").onclick = () => { $("settings").hidden = true; };
   $("settings").addEventListener("click", (e) => { if (e.target.id === "settings") $("settings").hidden = true; });
   $("quickadd").addEventListener("submit", (e) => {
@@ -1335,7 +1699,7 @@ Possible actions (use [] if nothing changes):
     }
     function pet(e) {
       heartAt(e);
-      state.pets = (state.pets || 0) + 1; hearts++;
+      state.pets = (state.pets || 0) + 1; hearts++; track("pets");
       if (state.petGain?.day !== today()) state.petGain = { day: today(), n: 0 };
       if (state.petGain.n < 25) { state.petGain.n++; addHappy(1); }
       const now = Date.now();
@@ -1362,7 +1726,7 @@ Possible actions (use [] if nothing changes):
   $("feed").onclick = () => {
     if (happy() >= 99) { say("I'm stuffed! Save your bananas for later."); return; }
     if (state.bananas < 1) { say("No bananas left… lock in with me to earn some!"); return; }
-    state.bananas -= 1; bump(); addHappy(6); persist();
+    state.bananas -= 1; bump(); addHappy(6); track("fed"); persist();
     setHome("eat");
     say(pick(["Nom nom nom!", "Mmm, banana!", "Yummy! Thank you!"]));
     chime([520, 660, 780]);
@@ -1388,7 +1752,9 @@ Possible actions (use [] if nothing changes):
   function renderAll() {
     state.tasks = state.tasks.filter(t => !t.done);
     $("bank-n").textContent = state.bananas;
-    renderMeter(); renderStage(); renderLog(); renderTasks(); if (tab === "shop") renderShop(); renderTry();
+    renderMeter(); renderStage(); renderLog(); renderLevelChip();
+    if ((state.level || 1) < level()) state.level = level();
+    $("prog-badge").textContent = questsReady() || ""; renderTasks(); if (tab === "shop") renderShop(); renderTry();
     if (!ft) greet();
   }
   renderAll();
