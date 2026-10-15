@@ -384,7 +384,7 @@ body.pip .bubble { top: 60px; }
 
 <script>
 // Auto-update: if the site has a newer version than this saved copy, reload once to get it.
-const APP_VERSION = "6";
+const APP_VERSION = "7";
 (async () => {
   try {
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -496,38 +496,82 @@ const APP_VERSION = "6";
     const thick = (d, c, w) => `<path d="${d}" fill="none" stroke="${O}" stroke-width="${w + 6}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
     const tail = "M136 196C178 204 190 156 166 146C150 140 144 160 158 163";
     const armL = "M68 148Q50 166 54 190", armR = "M132 148Q150 166 146 190";
-    let s = thick(tail, f.fur, 7);
+    // Each body part is its own group with a joint (data-cx/cy) so the rig below can move it.
+    const part = (p, cx, cy, inner) => `<g data-p="${p}" data-cx="${cx}" data-cy="${cy}">${inner}</g>`;
+    let s = part("tail", 138, 196, thick(tail, f.fur, 7));
     s += `<ellipse cx="100" cy="172" rx="44" ry="42" fill="${f.fur}"/><ellipse cx="100" cy="184" rx="27" ry="24" fill="${f.face}"/>`;
     if (sh) s += `<g clip-path="url(#${uid})">${sh.d()}</g>`;
     s += `<ellipse cx="100" cy="172" rx="44" ry="42" fill="none" ${S}/>`;
-    s += `<ellipse cx="80" cy="211" rx="17" ry="9" fill="${f.face}" ${S}/><ellipse cx="120" cy="211" rx="17" ry="9" fill="${f.face}" ${S}/>`;
-    s += thick(armL, f.fur, 13) + thick(armR, f.fur, 13);
-    if (sh) s += thick("M68 148Q61 155 59 163", sh.sleeve, 15) + thick("M132 148Q139 155 141 163", sh.sleeve, 15);
-    s += `<circle cx="54" cy="192" r="9" fill="${f.face}" ${S}/><circle cx="146" cy="192" r="9" fill="${f.face}" ${S}/>`;
+    s += part("legL", 80, 211, `<ellipse cx="80" cy="211" rx="17" ry="9" fill="${f.face}" ${S}/>`);
+    s += part("legR", 120, 211, `<ellipse cx="120" cy="211" rx="17" ry="9" fill="${f.face}" ${S}/>`);
     // head
-    s += `<circle cx="44" cy="92" r="19" fill="${f.fur}" ${S}/><circle cx="44" cy="92" r="10" fill="${f.face}"/><circle cx="156" cy="92" r="19" fill="${f.fur}" ${S}/><circle cx="156" cy="92" r="10" fill="${f.face}"/>`;
-    s += `<path d="M90 36C90 22 104 20 102 33C108 26 118 29 112 38" fill="${f.fur}" ${S}/>`;
-    s += `<circle cx="100" cy="88" r="56" fill="${f.fur}" ${S}/>`;
-    s += `<g fill="${f.face}"><ellipse cx="100" cy="106" rx="41" ry="29"/><circle cx="82" cy="82" r="21"/><circle cx="118" cy="82" r="21"/></g>`;
-    if (mood === "pet" || mood === "eat") s += `<path d="M75 88Q84 76 93 88M107 88Q116 76 125 88" fill="none" stroke="${O}" stroke-width="4.5" stroke-linecap="round"/>`;
-    else s += `<g class="m-eyes"><ellipse cx="84" cy="85" rx="8.5" ry="10.5" fill="${O}"/><ellipse cx="116" cy="85" rx="8.5" ry="10.5" fill="${O}"/><circle cx="81" cy="80.5" r="3.4" fill="#fff"/><circle cx="113" cy="80.5" r="3.4" fill="#fff"/><circle cx="87" cy="89" r="1.6" fill="#fff"/><circle cx="119" cy="89" r="1.6" fill="#fff"/></g>`;
-    s += `<ellipse cx="66" cy="106" rx="9" ry="5.5" fill="#ff8fab" opacity=".65"/><ellipse cx="134" cy="106" rx="9" ry="5.5" fill="#ff8fab" opacity=".65"/>`;
-    s += `<ellipse cx="95.5" cy="101" rx="2.6" ry="2" fill="${O}"/><ellipse cx="104.5" cy="101" rx="2.6" ry="2" fill="${O}"/>`;
-    if (mood === "focus") s += `<path d="M93 113Q100 117 107 113" fill="none" ${S} stroke-linecap="round"/><path d="M73 66L90 71M127 66L110 71" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`;
-    else if (mood === "talk") s += `<g class="m-talk"><path d="M87 108Q100 130 113 108Z" fill="#7a2838" ${S}/><path d="M93 119Q100 114 107 119Q100 125 93 119Z" fill="#ff8fab"/></g>`;
-    else if (mood === "wow" || mood === "pet" || mood === "eat") s += `<path d="M87 108Q100 132 113 108Z" fill="#7a2838" ${S}/><path d="M93 119Q100 114 107 119Q100 126 93 119Z" fill="#ff8fab"/>`;
-    else if (mood === "sad") s += `<path d="M90 116Q100 106 110 116" fill="none" ${S} stroke-linecap="round"/><path d="M74 70L89 65M126 70L111 65" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/><path d="M76 96q-4 7 0 9q4-2 0-9Z" fill="#7cc8ff" stroke="${O}" stroke-width="1.5"/>`;
-    else if (mood === "meh") s += `<path d="M92 113H108" ${S} stroke-linecap="round"/>`;
-    else s += `<path d="M89 109Q100 121 111 109" fill="none" ${S} stroke-linecap="round"/>`;
-    if (mood === "eat") s += `<use href="#banana" x="82" y="96" width="36" height="36"/>`;
+    let h = part("earL", 58, 98, `<circle cx="44" cy="92" r="19" fill="${f.fur}" ${S}/><circle cx="44" cy="92" r="10" fill="${f.face}"/>`);
+    h += part("earR", 142, 98, `<circle cx="156" cy="92" r="19" fill="${f.fur}" ${S}/><circle cx="156" cy="92" r="10" fill="${f.face}"/>`);
+    h += `<path d="M90 36C90 22 104 20 102 33C108 26 118 29 112 38" fill="${f.fur}" ${S}/>`;
+    h += `<circle cx="100" cy="88" r="56" fill="${f.fur}" ${S}/>`;
+    h += `<g fill="${f.face}"><ellipse cx="100" cy="106" rx="41" ry="29"/><circle cx="82" cy="82" r="21"/><circle cx="118" cy="82" r="21"/></g>`;
+    if (mood === "pet" || mood === "eat") h += `<path d="M75 88Q84 76 93 88M107 88Q116 76 125 88" fill="none" stroke="${O}" stroke-width="4.5" stroke-linecap="round"/>`;
+    else h += `<g class="m-eyes"><ellipse cx="84" cy="85" rx="8.5" ry="10.5" fill="${O}"/><ellipse cx="116" cy="85" rx="8.5" ry="10.5" fill="${O}"/><circle cx="81" cy="80.5" r="3.4" fill="#fff"/><circle cx="113" cy="80.5" r="3.4" fill="#fff"/><circle cx="87" cy="89" r="1.6" fill="#fff"/><circle cx="119" cy="89" r="1.6" fill="#fff"/></g>`;
+    h += `<ellipse cx="66" cy="106" rx="9" ry="5.5" fill="#ff8fab" opacity=".65"/><ellipse cx="134" cy="106" rx="9" ry="5.5" fill="#ff8fab" opacity=".65"/>`;
+    h += `<ellipse cx="95.5" cy="101" rx="2.6" ry="2" fill="${O}"/><ellipse cx="104.5" cy="101" rx="2.6" ry="2" fill="${O}"/>`;
+    if (mood === "focus") h += `<path d="M93 113Q100 117 107 113" fill="none" ${S} stroke-linecap="round"/><path d="M73 66L90 71M127 66L110 71" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`;
+    else if (mood === "talk") h += `<g class="m-talk"><path d="M87 108Q100 130 113 108Z" fill="#7a2838" ${S}/><path d="M93 119Q100 114 107 119Q100 125 93 119Z" fill="#ff8fab"/></g>`;
+    else if (mood === "wow" || mood === "pet" || mood === "eat") h += `<path d="M87 108Q100 132 113 108Z" fill="#7a2838" ${S}/><path d="M93 119Q100 114 107 119Q100 126 93 119Z" fill="#ff8fab"/>`;
+    else if (mood === "sad") h += `<path d="M90 116Q100 106 110 116" fill="none" ${S} stroke-linecap="round"/><path d="M74 70L89 65M126 70L111 65" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/><path d="M76 96q-4 7 0 9q4-2 0-9Z" fill="#7cc8ff" stroke="${O}" stroke-width="1.5"/>`;
+    else if (mood === "meh") h += `<path d="M92 113H108" ${S} stroke-linecap="round"/>`;
+    else h += `<path d="M89 109Q100 121 111 109" fill="none" ${S} stroke-linecap="round"/>`;
+    if (eq.glasses && GLASSES[eq.glasses]) h += GLASSES[eq.glasses]();
+    if (eq.hat && HATS[eq.hat]) h += HATS[eq.hat]();
+    s += part("head", 100, 142, h);
     if (eq.neck && NECK[eq.neck]) s += NECK[eq.neck]();
-    if (eq.glasses && GLASSES[eq.glasses]) s += GLASSES[eq.glasses]();
-    if (eq.hat && HATS[eq.hat]) s += HATS[eq.hat]();
-    return `<defs><clipPath id="${uid}"><ellipse cx="100" cy="172" rx="44" ry="42"/></clipPath></defs><g class="m-bob${mood === "pet" ? " m-wiggle" : ""}">${s}</g>`;
+    // arms last, so a raised arm (waving, eating) draws in front of his head
+    const arm = (side, d, sleeve, hx) => part(side, side === "armL" ? 68 : 132, 148,
+      thick(d, f.fur, 13) + (sh ? thick(sleeve, sh.sleeve, 15) : "") + `<circle cx="${hx}" cy="192" r="9" fill="${f.face}" ${S}/>`
+      + (side === "armR" && mood === "eat" ? `<use href="#banana" x="128" y="176" width="34" height="34"/>` : ""));
+    s += arm("armL", armL, "M68 148Q61 155 59 163", 54) + arm("armR", armR, "M132 148Q139 155 141 163", 146);
+    return `<defs><clipPath id="${uid}"><ellipse cx="100" cy="172" rx="44" ry="42"/></clipPath></defs><g class="m-bob${mood === "pet" ? " m-wiggle" : ""}" data-mood="${mood}">${s}</g>`;
   }
   const SKY = { jungle: ["#bdeccf", "#7cc47f"], beach: ["#aee4ff", "#f6d68f"], bedroom: ["#ffe0ea", "#e8b98a"], space: ["#23265e", "#c9c6dd"] };
   const scene = (eq, mood, o = {}) =>
     `<svg class="scene" viewBox="0 0 320 250" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Your monkey"><rect x="-1000" y="-1000" width="2320" height="1300" fill="${(SKY[eq.place] || SKY.jungle)[0]}"/><rect x="-1000" y="226" width="2320" height="300" fill="${(SKY[eq.place] || SKY.jungle)[1]}"/>${(PLACE[eq.place] || PLACE.jungle)()}<g class="walker" style="transform: translate(${o.x || 0}px, 0px)">${o.toy && TOYS[o.toy] ? `<g transform="translate(${(o.x || 0) < 0 ? 262 : 82} 222)">${TOYS[o.toy]()}</g>` : ""}<g transform="translate(70 24) scale(.9)">${monkey(eq, mood)}</g></g></svg>`;
+
+  // =================== RIG: makes his body parts move ===================
+  // Angles in degrees around each joint. Left arm: + raises it outward. Right arm: - raises it outward.
+  const sin = Math.sin, abs = Math.abs, twitch = (t, k) => 14 * Math.pow(Math.max(0, sin(t * 0.7 + k)), 24);
+  const RIG = {
+    happy: t => ({ armL: 5 + 4 * sin(t * 1.7), armR: -5 - 4 * sin(t * 1.7 + .8), head: 3 * sin(t * .9), tail: 10 * sin(t * 1.4), earL: -twitch(t, 0), earR: twitch(t, 2) }),
+    meh: t => ({ armL: 2 + 2 * sin(t), armR: -2 - 2 * sin(t + .8), head: 2 * sin(t * .6), tail: 5 * sin(t * .8), earL: -6, earR: 6 }),
+    sad: t => ({ armL: -6, armR: 6, head: 7 + sin(t * .7), tail: 26 + 3 * sin(t * .5), earL: -22, earR: 22 }),
+    talk: t => ({ armL: 18 + 14 * sin(t * 2.6), armR: -30 - 28 * abs(sin(t * 3.2)), head: 4 * sin(t * 5), tail: 12 * sin(t * 2), earL: -4 * abs(sin(t * 5)), earR: 4 * abs(sin(t * 5)) }),
+    wow: t => ({ armL: 112 + 26 * sin(t * 9), armR: -112 - 26 * sin(t * 9 + 1), head: 5 * sin(t * 4), tail: 22 * sin(t * 4), earL: -8, earR: 8 }),
+    pet: t => ({ armL: -22 + 7 * sin(t * 12), armR: 22 - 7 * sin(t * 12), head: 10 + 3 * sin(t * 6), tail: 28 * sin(t * 7), earL: 10, earR: -10 }),
+    eat: t => ({ armL: 10, armR: 152 + 7 * sin(t * 14), head: -5 + 2 * sin(t * 14), tail: 14 * sin(t * 3) }),
+    focus: t => ({ armL: -30 + 9 * sin(t * 13), armR: 30 + 9 * sin(t * 13 + Math.PI), head: 2 * sin(t * 1.2), tail: 6 * sin(t), earL: -twitch(t, 1), earR: twitch(t, 3) }),
+  };
+  const rigNow = {};
+  let waveUntil = 0;
+  function wave(ms = 2400) { waveUntil = performance.now() + ms; }
+  function rigFrame(now) {
+    const t = now / 1000;
+    for (const id of ["scene", "fscene"]) {
+      const box = $(id), mb = box && box.querySelector(".m-bob");
+      if (!mb || !box.getClientRects().length) continue;
+      const pose = (RIG[mb.dataset.mood] || RIG.happy)(t);
+      if (box.closest(".walking")) {
+        Object.assign(pose, { armL: 20 * sin(t * 11), armR: 20 * sin(t * 11), legL: -7 * Math.max(0, sin(t * 11)), legR: -7 * Math.max(0, sin(t * 11 + Math.PI)), tail: 18 * sin(t * 5.5) });
+      } else if (id === "scene" && now < waveUntil) {
+        pose.armR = -140 + 24 * sin(t * 13);
+      }
+      for (const el of box.querySelectorAll("[data-p]")) {
+        const p = el.dataset.p, key = id + p, target = pose[p] || 0;
+        const cur = rigNow[key] ?? 0, v = cur + (target - cur) * 0.3;
+        rigNow[key] = v;
+        el.setAttribute("transform", p === "legL" || p === "legR" ? `translate(0 ${v.toFixed(2)})` : `rotate(${v.toFixed(2)} ${el.dataset.cx} ${el.dataset.cy})`);
+      }
+    }
+    requestAnimationFrame(rigFrame);
+  }
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) requestAnimationFrame(rigFrame);
 
   // =================== SHOP ===================
   const CATS = [
@@ -700,7 +744,7 @@ const APP_VERSION = "6";
     "Every minute is a banana. Keep going!", "Messy progress still counts.", "Ooh, look at you go.",
     "If you get stuck, just do the smallest next thing.", "Bananas are piling up!",
   ];
-  function greet() { greet0(); if (!state.pets && !/pet/i.test($("bubble").textContent)) $("bubble").textContent += " (Psst… you can pet me!)"; }
+  function greet() { wave(); greet0(); if (!state.pets && !/pet/i.test($("bubble").textContent)) $("bubble").textContent += " (Psst… you can pet me!)"; }
   function greet0() {
     const hp = happy(), ex = state.tasks.some(t => t.example);
     if (!ex && hp < 20) return say("I missed you… Pet me, feed me, or lock in with me?");
