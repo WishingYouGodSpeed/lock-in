@@ -383,6 +383,18 @@ body.pip .bubble { top: 60px; }
 </div>
 
 <script>
+// Auto-update: if the site has a newer version than this saved copy, reload once to get it.
+const APP_VERSION = "6";
+(async () => {
+  try {
+    const res = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
+    const m = (await res.text()).match(/APP_VERSION = "(\d+)"/);
+    if (m && m[1] !== APP_VERSION && sessionStorage.getItem("lockin.reloaded") !== m[1]) {
+      sessionStorage.setItem("lockin.reloaded", m[1]);
+      location.replace(location.pathname + "?v=" + m[1]);
+    }
+  } catch {}
+})();
 (() => {
   let pipWin = null;
   const $ = (id) => document.getElementById(id) || (pipWin ? pipWin.document.getElementById(id) : null);
