@@ -356,7 +356,7 @@ body.pip .bubble { top: 60px; }
     <div class="panel" id="p-home" role="tabpanel" aria-labelledby="tab-home">
       <div class="keybox" id="keybox" hidden>
         <b>Download Bongo's brain</b>
-        <span id="brain-msg">Free and private. One-time 700 MB download, so use Wi-Fi.</span>
+        <span id="brain-msg">Free and private. One-time download, so use Wi-Fi.</span>
         <div class="brainbar" id="brain-bar" hidden><i id="brain-fill"></i></div>
         <div class="keyrow"><button class="chunky" id="key-save" type="button">Download</button></div>
       </div>
@@ -409,6 +409,7 @@ body.pip .bubble { top: 60px; }
       <div class="links"><button class="link" id="ntfy-test" type="button">Send a test</button><button class="link" id="ntfy-off" type="button">Turn off</button></div>
     </div>
     <div class="row"><span>Move to another device<small>Copy here, then Paste on your other device</small></span><span class="rowbtns"><button class="link" id="sync-copy" type="button">Copy</button><button class="link" id="sync-paste" type="button">Paste</button></span></div>
+    <div class="row"><span>Smarter brain<small>Understands you better. 1 GB download, needs a newer phone</small></span><button class="switch" id="big-brain" type="button" aria-pressed="false" aria-label="Smarter brain"></button></div>
     <div class="row" id="pip-row" hidden><span>Float over other tabs<small>Bongo stays on top while you browse (Chrome)</small></span><button class="link" id="pip-btn" type="button">Pop out</button></div>
     <div class="row"><span>Conversation</span><button class="link" id="newchat-btn" type="button">Start fresh</button></div>
     <div class="row" id="list-tools"><span>Task list</span><button class="link" id="clear-all" type="button">Clear everything</button></div>
@@ -447,7 +448,7 @@ body.pip .bubble { top: 60px; }
 
 <script>
 // Auto-update: if the site has a newer version than this saved copy, reload once to get it.
-const APP_VERSION = "10";
+const APP_VERSION = "11";
 (async () => {
   try {
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -735,7 +736,8 @@ const APP_VERSION = "10";
   // Bongo's brain: a small AI model (Llama 3.2 1B) that runs right on this device with WebLLM.
   // Free, no account, works offline after the first download, chats never leave the device.
   const WEBLLM_URL = "https://esm.run/@mlc-ai/web-llm@0.2.85";
-  const BRAIN_LS = "lockin.brain";
+  const brainKey = () => state.bigBrain ? "lockin.brain.big" : "lockin.brain";
+  const brainSize = () => state.bigBrain ? "1 GB" : "700 MB";
   const REPLY_SCHEMA = {
     type: "object",
     properties: {
@@ -749,18 +751,31 @@ const APP_VERSION = "10";
     required: ["reply", "actions"],
   };
   let webllm = null, engine = null, brainLoading = null, modelId = null;
-  const brainDownloaded = () => { try { return localStorage.getItem(BRAIN_LS) === "1"; } catch { return false; } };
+  const brainDownloaded = () => { try { return localStorage.getItem(brainKey()) === "1"; } catch { return false; } };
   async function pickModel() {
     const adapter = navigator.gpu ? await navigator.gpu.requestAdapter() : null;
     if (!adapter) return null;
-    return adapter.features.has("shader-f16") ? "Llama-3.2-1B-Instruct-q4f16_1-MLC" : "Llama-3.2-1B-Instruct-q4f32_1-MLC";
+    const f16 = adapter.features.has("shader-f16");
+    if (state.bigBrain) return f16 ? "Qwen2.5-1.5B-Instruct-q4f16_1-MLC" : "Qwen2.5-1.5B-Instruct-q4f32_1-MLC";
+    return f16 ? "Llama-3.2-1B-Instruct-q4f16_1-MLC" : "Llama-3.2-1B-Instruct-q4f32_1-MLC";
   }
   function brainProgress(text, frac) {
     $("brain-msg").textContent = text;
     $("brain-bar").hidden = frac == null;
     if (frac != null) $("brain-fill").style.width = Math.round(frac * 100) + "%";
   }
+  $("big-brain").onclick = async () => {
+    try { await engine?.unload(); } catch {}
+    engine = null;
+    state.bigBrain = !state.bigBrain; persist();
+    $("big-brain").setAttribute("aria-pressed", String(!!state.bigBrain));
+    renderBrainState();
+    $("settings").hidden = true; setTab("home");
+    if (brainDownloaded()) { loadBrain().then(() => say(state.bigBrain ? "Big brain mode! I'm feeling smart." : "Back to my small brain.")).catch(() => {}); }
+    else { $("key-save").textContent = "Download"; $("key-save").hidden = false; brainProgress(`Free and private. One-time ${brainSize()} download, so use Wi-Fi.`, null); $("keybox").hidden = false; say(`I need to download my ${state.bigBrain ? "bigger" : "smaller"} brain first. Tap Download!`); }
+  };
   function renderBrainState() {
+    $("big-brain").setAttribute("aria-pressed", String(!!state.bigBrain));
     const d = brainDownloaded();
     $("brain-state").textContent = engine ? "Ready, on this device" : d ? "Downloaded" : "Not downloaded";
     $("key-change").textContent = d ? "Delete" : "Download";
@@ -784,7 +799,7 @@ const APP_VERSION = "10";
             if (!first) $("mic-hint").textContent = `Waking up Bongo's brain… ${pct}%`;
           },
         });
-        try { localStorage.setItem(BRAIN_LS, "1"); } catch {}
+        try { localStorage.setItem(brainKey(), "1"); } catch {}
         $("keybox").hidden = true; $("mic-hint").textContent = "";
         renderBrainState();
         return engine;
@@ -800,11 +815,11 @@ const APP_VERSION = "10";
     })();
     return brainLoading;
   }
-  async function askLocal(prompt) {
+  async function askLocal(messages, opts = {}) {
     const eng = await loadBrain();
     const res = await eng.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.6,
+      messages: Array.isArray(messages) ? messages : [{ role: "user", content: messages }],
+      temperature: opts.temperature ?? 0.7,
       max_tokens: 500,
       response_format: { type: "json_object", schema: JSON.stringify(REPLY_SCHEMA) },
     });
@@ -963,44 +978,44 @@ const APP_VERSION = "10";
     pushChat("me", text); input.value = "";
     typing = true; renderLog(); renderTasks();
     say(pick(["Hmm…", "Ooh, okay…", "Thinking…"]));
-    const history = (state.chat || []).slice(-13, -1).map(m => (m.who === "me" ? "Them: " : "You: ") + m.text).join("\n") || "(start of conversation)";
-    const list = state.tasks.map((t, i) => `${i + 1} | ${t.title} | ${t.minutes}m | ${t.priority} | ${t.done ? "done" : "open"}`).join("\n") || "(empty)";
-    const prompt =
-`You are ${state.name}, a cute, upbeat monkey sidekick in an app called Lock In. You help a person with ADHD plan and actually do their stuff. You chat with them and you manage their to-do list.
+    const list = state.tasks.map((t, i) => `${i + 1}. ${t.title} (${t.minutes} min, ${t.priority})`).join("\n") || "(empty)";
+    const system = `You are ${state.name}, a friendly, upbeat cartoon monkey. Your human has ADHD. You chat with them like a supportive best friend AND you manage their to-do list.
 
-How you talk: your reply is read out loud, so keep it short and spoken. 1 to 3 short sentences. Casual, warm, a bit playful, never preachy or cheesy. At most one question at a time. No emoji, no markdown, no lists.
+How to talk: actually respond to what they just said, in your own words. Keep it short and casual, 1 or 2 sentences. Be kind and a little playful. No emoji.
 
-How you help:
-- When they mention things to do, add them as tasks. Split big or vague things into concrete tasks that fit in one sitting (max ~60 min). Titles start with a verb, max 60 characters. Minutes are realistic for someone with ADHD, include a small buffer, rounded to 5. firstStep is the tiniest physical action to begin (under 2 minutes).
-- Don't add tasks they didn't mention. Don't add duplicates of tasks already on the list.
-- If they seem overwhelmed or ask what to do, pick ONE task for them and say why in a few words.
-- If they say they're ready, or say "let's do X" or "start a timer", start a Lock In timer on that task.
-- If they say they finished something, mark it done and cheer briefly.
-- If they want to change or remove something, do it.
-- If they mention a time for something ("at 3", "at 5pm", "remind me at 7"), add "remindAt":"HH:MM" (24-hour clock) to that add or update action.
-- If they're just chatting or venting, be kind and brief, then gently steer back to one small next step.
-
-Right now: ${new Date().toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" })}. They have ${state.bananas} bananas. Your happiness is ${Math.round(happy())}%.
-
-Their current tasks (number | title | minutes | priority | status):
+Their to-do list right now:
 ${list}
+Time now: ${new Date().toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" })}.
 
-Recent conversation:
-${history}
-
-They just said:
-"""${text}"""
-
-Reply with only JSON in this shape:
-{"reply":"what you say out loud","actions":[]}
-Possible actions (use [] if nothing changes):
-{"type":"add","title":"...","minutes":15,"priority":"now|soon|later","firstStep":"...","start":false}
-{"type":"update","id":"<number>","title":"...","minutes":20,"priority":"soon","firstStep":"..."}  (include only fields that change)
-{"type":"done","id":"<number>"}
-{"type":"delete","id":"<number>"}
-{"type":"start","id":"<number>"}  (starts a Lock In timer; at most one per reply. For a brand-new task use "start":true on its add action instead.)`;
+Always answer with JSON: {"reply": "...", "actions": [...]}
+"reply" is what you say back to them.
+"actions" changes the to-do list. Use [] when nothing should change.
+- Add a task: {"type":"add","title":"Wash the dishes","minutes":20,"priority":"soon","firstStep":"Fill the sink"}. Add "remindAt":"17:00" if they say a time.
+- They finished a task: {"type":"done","id":"2"} (the task's number from the list)
+- Remove a task: {"type":"delete","id":"2"}
+- Start the focus timer on a task: {"type":"start","id":"1"}
+- Change a task: {"type":"update","id":"1","minutes":45}
+Only add tasks they actually mention. Break big things into small tasks under 60 minutes. Priority is "now" if urgent, otherwise "soon" or "later".`;
+    const EXAMPLES = [
+      { role: "user", content: "ugh i have to clean my room and text my boss at 5" },
+      { role: "assistant", content: JSON.stringify({ reply: "Two easy wins! I added cleaning your room and texting your boss at 5. Want to start with the room?", actions: [{ type: "add", title: "Clean my room", minutes: 25, priority: "soon", firstStep: "Pick up 5 things off the floor" }, { type: "add", title: "Text my boss", minutes: 5, priority: "now", firstStep: "Open their chat", remindAt: "17:00" }] }) },
+      { role: "user", content: "im so tired today" },
+      { role: "assistant", content: JSON.stringify({ reply: "Aw, tired days are rough. Let's just do one tiny thing, then you can rest. Deal?", actions: [] }) },
+    ];
+    const past = (state.chat || []).slice(-9, -1).map(m => m.who === "me"
+      ? { role: "user", content: m.text }
+      : { role: "assistant", content: JSON.stringify({ reply: m.text, actions: [] }) });
+    while (past.length && past[0].role !== "user") past.shift();
+    const messages = [{ role: "system", content: system }, ...EXAMPLES, ...past, { role: "user", content: text }];
     try {
-      const out = await sample.json(prompt, { modelTier: "default", cache: false });
+      const bad = (o) => !o || typeof o.reply !== "string" || o.reply.trim().length < 2 || /what you say|\.\.\.\"?$|^\W+$/i.test(o.reply.trim());
+      let out = await sample.json(messages, { modelTier: "default", cache: false });
+      if (bad(out)) out = await sample.json(messages, { temperature: 0.95 });
+      if (bad(out)) out = { reply: "Hmm, my brain fizzled. Can you say that one more time?", actions: [] };
+      // never let the example tasks leak into the real list
+      const said = text.toLowerCase();
+      out.actions = (Array.isArray(out.actions) ? out.actions : []).filter(a => !(a && a.type === "add" &&
+        ((/clean my room/i.test(a.title || "") && !/room/.test(said)) || (/text my boss/i.test(a.title || "") && !/boss/.test(said)))));
       const reply = String(out?.reply || "Okay!").slice(0, 500);
       const startId = applyActions(Array.isArray(out?.actions) ? out.actions : []);
       typing = false;
@@ -1591,9 +1606,9 @@ Possible actions (use [] if nothing changes):
       engine = null;
       await webllm.deleteModelAllInfoInCache(modelId || await pickModel());
     } catch {}
-    try { localStorage.removeItem(BRAIN_LS); } catch {}
+    try { localStorage.removeItem(brainKey()); } catch {}
     renderBrainState();
-    $("key-save").textContent = "Download"; brainProgress("Free and private. One-time 700 MB download, so use Wi-Fi.", null);
+    $("key-save").textContent = "Download"; brainProgress(`Free and private. One-time ${brainSize()} download, so use Wi-Fi.`, null);
     $("keybox").hidden = false;
   };
   $("settings-btn").onclick = () => { $("settings").hidden = false; renderNtfy(); };
