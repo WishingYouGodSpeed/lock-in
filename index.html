@@ -66,13 +66,13 @@ button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px
 }
 .hud > * { pointer-events: auto; }
 .hud-l, .hud-r { display: flex; gap: 6px; align-items: center; }
-.hud-l { flex-direction: column; align-items: flex-start; }
+.hud-l { flex-direction: row; align-items: center; }
 .chip { background: rgba(255, 253, 248, .92); border-radius: 999px; box-shadow: 0 2px 8px rgba(58, 36, 22, .12); }
 .nametag { font: 800 1.05rem/1 var(--display); padding: 8px 12px 6px; display: inline-flex; gap: 6px; align-items: center; }
 .nametag svg { width: 14px; height: 14px; opacity: .55; }
 .nameinput { font: 800 1.05rem var(--display); color: var(--ink); width: 9em; padding: 6px 12px; border: 0; border-radius: 999px; background: #fff; box-shadow: 0 2px 8px rgba(58, 36, 22, .15); }
-.meter { display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; }
-.meter svg { width: 20px; height: 20px; display: block; }
+.meter { display: flex; align-items: center; gap: 4px; padding: 5px 12px 5px 7px; }
+.meter svg { width: 24px; height: 24px; display: block; }
 .mbar { width: 64px; height: 8px; border-radius: 99px; background: rgba(58, 36, 22, .12); overflow: hidden; }
 .mbar i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--green); transition: width .5s, background-color .5s; }
 .meter span { font: 800 .78rem var(--display); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 2.4em; }
@@ -110,6 +110,7 @@ button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px
 .phead h2 { margin: 0; font: 800 1.35rem/1 var(--display); }
 .phead span { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; margin: 0 -4px; padding: 2px 4px 6px; }
+.caption:empty { display: none; }
 .caption { margin: 0; font-size: .8rem; color: var(--muted); text-align: center; min-height: 1.1em; }
 .status { margin: 0; font-size: .85rem; font-weight: 700; color: var(--muted); text-align: center; }
 .status:empty { display: none; }
@@ -285,9 +286,9 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
 .week .wsum b { color: var(--ink); }
 .week .wtip { font-size: .8rem; color: var(--muted); text-align: center; min-height: 1.2em; margin: 4px 0 0; }
 .wbar { cursor: pointer; }
-.pickstage { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); bottom: 40px; background: var(--green); color: #fff; padding: 9px 14px 7px; border-radius: 999px; box-shadow: 0 3px 0 var(--green-d); font: 800 .95rem var(--display); white-space: nowrap; }
+.pickstage { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); bottom: 40px; background: var(--green); color: #fff; padding: 12px 22px 10px; font-size: 1.05rem !important; border-radius: 999px; box-shadow: 0 3px 0 var(--green-d); font: 800 .95rem var(--display); white-space: nowrap; }
 .pickstage:active { box-shadow: 0 1px 0 var(--green-d); }
-.lvlin { font: 800 .78rem var(--display); color: var(--ink); padding-left: 4px; white-space: nowrap; }
+.lvlin { font: 800 .9rem/1 var(--display); color: var(--ink); white-space: nowrap; padding-top: 2px; }
 .focus:not([hidden]) ~ .toast { top: calc(env(safe-area-inset-top, 0px) + 12px); bottom: auto; }
 .sheet { overflow: hidden; }
 @media (max-width: 380px) { .trick, .feed, .pickstage { font-size: .85rem; padding: 8px 10px 6px; } }
@@ -332,16 +333,12 @@ body.pip .bubble { top: 60px; }
     <header class="hud">
       <div class="hud-l">
         <div id="namebar"></div>
-        <div class="chip meter" title="Happiness">
-          <b class="lvlin" id="lvl-chip"></b>
-          <span id="m-heart" aria-hidden="true"></span>
-          <div class="mbar" id="m-bar" role="meter" aria-label="Happiness" aria-valuemin="0" aria-valuemax="100"><i id="m-fill"></i></div>
-          <span id="m-num"></span><span class="sr" id="m-word"></span>
+        <div class="chip meter" id="m-bar" role="meter" aria-label="Happiness" aria-valuemin="0" aria-valuemax="100" title="Happiness">
+          <span id="m-heart" aria-hidden="true"></span><b class="lvlin" id="lvl-chip"></b><span class="sr" id="m-word"></span>
         </div>
-        <div class="chip streak" id="streak" hidden></div>
+        <span id="streak" hidden></span>
       </div>
       <div class="hud-r">
-        <button class="chip pill" id="pip-btn" type="button" hidden>Pop out</button>
         <div class="chip bank" id="bank" aria-live="polite"><svg class="bico"><use href="#banana"/></svg><span id="bank-n">0</span></div>
         <button class="chip hudbtn" id="settings-btn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       </div>
@@ -352,9 +349,7 @@ body.pip .bubble { top: 60px; }
       <div class="what" id="try-what"></div>
       <button class="chunky act" id="try-act"></button>
     </div>
-    <button class="trick chunky" id="trick-btn" type="button">Trick!</button>
     <button class="pickstage" id="pick-btn" type="button">Pick a task for me</button>
-    <button class="feed" id="feed" type="button" aria-label="Feed one banana"><svg class="bico"><use href="#banana"/></svg>Feed</button>
   </section>
 
   <section class="sheet">
@@ -372,7 +367,7 @@ body.pip .bubble { top: 60px; }
         <button class="send" id="plan-btn" type="submit" aria-label="Send"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
         <button class="mic" id="mic-btn" type="button" aria-label="Talk"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5"/></svg></button>
       </form>
-      <p class="caption" id="mic-hint">Tap the mic and talk.</p>
+      <p class="caption" id="mic-hint"></p>
     </div>
 
     <div class="panel" id="p-todo" role="tabpanel" aria-labelledby="tab-todo" hidden>
@@ -414,6 +409,7 @@ body.pip .bubble { top: 60px; }
       <div class="links"><button class="link" id="ntfy-test" type="button">Send a test</button><button class="link" id="ntfy-off" type="button">Turn off</button></div>
     </div>
     <div class="row"><span>Move to another device<small>Copy here, then Paste on your other device</small></span><span class="rowbtns"><button class="link" id="sync-copy" type="button">Copy</button><button class="link" id="sync-paste" type="button">Paste</button></span></div>
+    <div class="row" id="pip-row" hidden><span>Float over other tabs<small>Bongo stays on top while you browse (Chrome)</small></span><button class="link" id="pip-btn" type="button">Pop out</button></div>
     <div class="row"><span>Conversation</span><button class="link" id="newchat-btn" type="button">Start fresh</button></div>
     <div class="row" id="list-tools"><span>Task list</span><button class="link" id="clear-all" type="button">Clear everything</button></div>
     <div class="row"><span>Bongo's brain<small id="brain-state">Not downloaded</small></span><button class="link" id="key-change" type="button">Download</button></div>
@@ -451,7 +447,7 @@ body.pip .bubble { top: 60px; }
 
 <script>
 // Auto-update: if the site has a newer version than this saved copy, reload once to get it.
-const APP_VERSION = "9";
+const APP_VERSION = "10";
 (async () => {
   try {
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -553,6 +549,12 @@ const APP_VERSION = "9";
     car: () => `<g class="toy toy-roll"><path d="M-12 -24Q-10 -38 0 -38H6Q13 -38 15 -24Z" fill="#ff9fb7" ${S}/><rect x="-25" y="-26" width="50" height="17" rx="7" fill="#ef5a6b" ${S}/><rect x="-6" y="-35" width="12" height="9" rx="2" fill="#aee4ff"/><circle cx="-13" cy="-8" r="7" fill="${O}"/><circle cx="13" cy="-8" r="7" fill="${O}"/><circle cx="-13" cy="-8" r="2.5" fill="#fff"/><circle cx="13" cy="-8" r="2.5" fill="#fff"/></g>`,
     top: () => `<g class="toy toy-spin"><rect x="-3" y="-42" width="6" height="12" rx="3" fill="#5a4bd1" ${S}/><path d="M0 0L-20 -20Q0 -36 20 -20Z" fill="#7d6bff" ${S}/><path d="M-12 -24Q0 -30 12 -24" fill="none" stroke="#ffd23f" stroke-width="4"/></g>`,
     teddy: () => `<g class="toy toy-wobble"><circle cx="-10" cy="-42" r="6" fill="#c98a4b" ${S}/><circle cx="10" cy="-42" r="6" fill="#c98a4b" ${S}/><ellipse cx="0" cy="-13" rx="15" ry="13" fill="#c98a4b" ${S}/><circle cx="0" cy="-33" r="12" fill="#c98a4b" ${S}/><ellipse cx="0" cy="-29" rx="5" ry="4" fill="#fde7c6"/><circle cx="-4" cy="-35" r="1.8" fill="${O}"/><circle cx="4" cy="-35" r="1.8" fill="${O}"/><ellipse cx="0" cy="-12" rx="7" ry="6" fill="#fde7c6"/></g>`,
+  };
+
+  const SNACKS = {
+    banana: { happy: 6, art: () => `<use href="#banana" x="-19" y="-19" width="38" height="38"/>` },
+    smoothie: { happy: 15, art: () => `<path d="M3 -10L9 -21" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/><path d="M3 -10L9 -21" stroke="#ff7aa8" stroke-width="1.6" stroke-linecap="round"/><path d="M-11 -10H11L8 18H-8Z" fill="#fff" ${S}/><path d="M-10.3 -3H10.3L8 18H-8Z" fill="#ffd23f"/><path d="M-11 -10H11L8 18H-8Z" fill="none" ${S}/>` },
+    cake: { happy: 35, art: () => `<path d="M-17 2H17V17H-17Z" fill="#f8d6ad" ${S}/><path d="M-17 2Q-17 -8 0 -8Q17 -8 17 2Z" fill="#fff" ${S}/><path d="M-17 9H17" stroke="#ffd23f" stroke-width="3"/><circle cx="0" cy="-11" r="4.5" fill="#ef5a6b" ${S}/>` },
   };
 
   let uidN = 0;
@@ -670,6 +672,7 @@ const APP_VERSION = "9";
       ["pink", "Bubblegum", 60], ["blue", "Sky blue", 60], ["mint", "Mint", 60], ["gold", "Golden", 150]] },
     { key: "place", label: "Places", view: null, items: [
       ["jungle", "Jungle", 0], ["beach", "Beach", 60], ["bedroom", "Bedroom", 60], ["space", "Outer space", 120]] },
+    { key: "snack", label: "Snacks", view: null, items: [["banana", "Banana", 1], ["smoothie", "Smoothie", 3], ["cake", "Banana cake", 8]] },
     { key: "toy", label: "Toys", view: null, items: [
       ["ball", "Bouncy ball", 0], ["duck", "Rubber duck", 25], ["top", "Spinning top", 30], ["car", "Toy car", 40], ["teddy", "Teddy bear", 60]] },
   ];
@@ -782,7 +785,7 @@ const APP_VERSION = "9";
           },
         });
         try { localStorage.setItem(BRAIN_LS, "1"); } catch {}
-        $("keybox").hidden = true; $("mic-hint").textContent = "Tap the mic and talk.";
+        $("keybox").hidden = true; $("mic-hint").textContent = "";
         renderBrainState();
         return engine;
       } catch (e) {
@@ -791,7 +794,7 @@ const APP_VERSION = "9";
         brainProgress(e?.code === "no_gpu"
           ? "This browser can't run Bongo's brain. On iPhone, update to the newest iOS and use Safari. On a Mac, use Chrome or the newest Safari."
           : "The download got interrupted. Check your Wi-Fi and try again.", null);
-        $("mic-hint").textContent = "Tap the mic and talk.";
+        $("mic-hint").textContent = "";
         throw e;
       } finally { brainLoading = null; }
     })();
@@ -816,21 +819,25 @@ const APP_VERSION = "9";
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   let bubbleT = null;
   function say(text, where = "bubble") {
+    if (where === "bubble" && text.length > 100) {
+      const cut = text.slice(0, 100), end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "));
+      text = end > 30 ? cut.slice(0, end + 1) : cut.replace(/\s+\S*$/, "") + "…";
+    }
     const b = $(where); b.textContent = text; b.hidden = false;
-    if (where === "bubble") { clearTimeout(bubbleT); bubbleT = setTimeout(() => { if (!listening && !chatBusy && !speakingNow) b.hidden = true; }, 9000); }
+    if (where === "bubble") { clearTimeout(bubbleT); bubbleT = setTimeout(() => { if (!listening && !chatBusy && !speakingNow) b.hidden = true; }, 6000); }
   }
   const FOCUS_LINES = [
     "We're locked in. Just the next tiny step.", "You're doing it! I'm right here.", "Phone face down. Eyes on the task.",
     "Every minute is a banana. Keep going!", "Messy progress still counts.", "Ooh, look at you go.",
     "If you get stuck, just do the smallest next thing.", "Bananas are piling up!",
   ];
-  function greet() { wave(); greet0(); if (!state.pets && !/pet/i.test($("bubble").textContent)) $("bubble").textContent += " (Psst… you can pet me!)"; }
+  function greet() { wave(); greet0(); if (!state.pets && !/pet/i.test($("bubble").textContent)) $("bubble").textContent += " Psst… rub me!"; }
   function greet0() {
     const hp = happy(), ex = state.tasks.some(t => t.example);
     if (!ex && hp < 20) return say("I missed you… Pet me, feed me, or lock in with me?");
     if (!ex && hp < 40 && Math.random() < 0.6) return say(pick(["Can I get a pet?", "I'm a little hungry… banana?", "Lock in with me? I get lonely."]));
     const open = state.tasks.filter(t => !t.done && !t.example).length;
-    if (state.tasks.some(t => t.example)) return say(`Hi, I'm ${state.name}! Tell me everything you have to do and I'll make us a plan.`);
+    if (state.tasks.some(t => t.example)) return say(`Hi, I'm ${state.name}! What do we need to get done?`);
     if (!open) return say(pick([`All clear! Got more stuff in your head? Tell ${state.name}.`, "Nothing left! Wanna spend some bananas on me?"]));
     const next = state.tasks.find(t => !t.done);
     say(pick([`Let's lock in on "${next.title}". Just ${next.minutes} minutes.`, `${open} thing${open === 1 ? "" : "s"} left. Tap Lock in and I'll do it with you.`, "Pick one. Any one. I'll keep you company."]));
@@ -846,13 +853,14 @@ const APP_VERSION = "9";
   function addHappy(n) { state.happy = { v: clamp(happy() + n), at: Date.now() }; renderMeter(); }
   function renderMeter() {
     const h = Math.round(happy());
-    if (!$("m-heart").firstChild) $("m-heart").innerHTML = `<svg viewBox="0 0 40 40">${heart(20, 21, 13, "#ff4f8b", 3)}</svg>`;
-    $("m-fill").style.width = h + "%";
-    $("m-fill").style.backgroundColor = h >= 65 ? "var(--green)" : h >= 40 ? "var(--banana)" : "var(--pink)";
-    $("m-word").textContent = h >= 85 ? "Over the moon" : h >= 65 ? "Happy" : h >= 40 ? "Doing okay" : h >= 20 ? "Feeling lonely" : "Sad";
-    $("m-num").textContent = h + "%";
+    const col = h >= 65 ? "#ff4f8b" : h >= 40 ? "#ff8fb0" : "#c7b3a6";
+    const top = (33 - 29 * h / 100).toFixed(1);
+    $("m-heart").innerHTML = `<svg viewBox="0 0 40 40"><defs><clipPath id="hfill"><rect x="0" y="${top}" width="40" height="40"/></clipPath></defs>${heart(20, 21, 13, "#fff", 3)}<g clip-path="url(#hfill)">${heart(20, 21, 13, col, 3)}</g></svg>`;
+    $("m-word").textContent = (h >= 85 ? "Over the moon" : h >= 65 ? "Happy" : h >= 40 ? "Doing okay" : h >= 20 ? "Feeling lonely" : "Sad") + `, ${h}%`;
     $("m-bar").setAttribute("aria-valuenow", String(h));
+    $("m-bar").title = `Happiness ${h}%`;
   }
+
   let toastT = null;
   function toast(html) {
     let t = document.querySelector(".toast");
@@ -1137,7 +1145,9 @@ Possible actions (use [] if nothing changes):
     const L = level(), x = xp(), lo = levelFloor(L), hi = levelFloor(L + 1), next = TRICKS.find(([, lv]) => lv > L);
     const lv = el("div", "lvl");
     lv.innerHTML = `<div class="lvl-top"><b>Level ${L}</b><span>${x - lo} / ${hi - lo} XP</span></div><div class="xpbar"><i style="width:${Math.round((x - lo) / (hi - lo) * 100)}%"></i></div>`;
-    lv.append(el("small", null, (next ? `Next trick at level ${next[1]}: ${next[2]}. ` : "") + "XP: 1 per minute locked in, 5 per task finished."));
+    lv.append(el("small", null, (next ? `Next trick at level ${next[1]}: ${next[2]}. ` : "") + `Tap ${state.name} to see his tricks. XP: 1 per minute locked in, 5 per task finished.`));
+    const st = state.streak || {};
+    if (st.count && (st.last === today() || st.last === yesterday())) lv.append(el("small", null, `${st.count} day streak. Lock in today to keep it going!`));
     box.append(lv);
     // quests
     const d = daily(), qh = el("div", "sect"); qh.append(document.createTextNode("Today's quests"), el("span", null, "New ones tomorrow"));
@@ -1251,7 +1261,6 @@ Possible actions (use [] if nothing changes):
     }
     const st = state.streak || {};
     const live = st.count && (st.last === today() || st.last === yesterday());
-    $("streak").hidden = !live;
     $("streak").textContent = live ? `${st.count} day streak` : "";
   }
 
@@ -1264,6 +1273,11 @@ Possible actions (use [] if nothing changes):
     const wearing = state.eq[selected.cat.key] === selected.id;
     const what = $("try-what"); what.replaceChildren(document.createTextNode(selected.name));
     const act = $("try-act"); act.className = "chunky act"; act.disabled = false;
+    if (selected.cat.key === "snack") {
+      what.append(el("small", null, `+${SNACKS[selected.id].happy} happiness`));
+      act.classList.add("buy"); act.innerHTML = `Feed ${BAN} ${selected.price}`; act.disabled = state.bananas < selected.price;
+      return;
+    }
     if (wearing) {
       what.append(el("small", null, ALWAYS.has(selected.cat.key) ? "Wearing it now" : "Wearing it now. Tap to take it off."));
       if (ALWAYS.has(selected.cat.key)) { act.textContent = "Wearing"; act.disabled = true; } else { act.classList.add("off"); act.textContent = "Take off"; }
@@ -1288,11 +1302,12 @@ Possible actions (use [] if nothing changes):
     const grid = $("grid"); grid.replaceChildren();
     for (const [id, name, price] of c.items) {
       const key = c.key + ":" + id;
-      const owned = state.owned.includes(key) || price === 0;
+      const owned = c.key !== "snack" && (state.owned.includes(key) || price === 0);
       const wearing = state.eq[c.key] === id;
       const t = el("button", "tile" + (wearing ? " wearing" : "") + (owned ? "" : " locked") + (selected && selected.cat.key === c.key && selected.id === id ? " sel" : ""));
       const eq = { fur: state.eq.fur, place: state.eq.place, hat: null, glasses: null, neck: null, shirt: null, [c.key]: id };
-      t.innerHTML = c.key === "toy" ? `<svg class="thumb" viewBox="-36 -56 72 72" aria-hidden="true">${TOYS[id]().replace(/ class="toy [^"]*"/, "")}</svg>`
+      t.innerHTML = c.key === "snack" ? `<svg class="thumb" viewBox="-26 -26 52 52" aria-hidden="true">${SNACKS[id].art()}</svg>`
+        : c.key === "toy" ? `<svg class="thumb" viewBox="-36 -56 72 72" aria-hidden="true">${TOYS[id]().replace(/ class="toy [^"]*"/, "")}</svg>`
         : c.view
         ? `<svg class="thumb" viewBox="${c.view}" aria-hidden="true">${monkey(eq, "happy").replace('class="m-bob"', "")}</svg>`
         : `<svg class="thumb" viewBox="0 0 320 250" aria-hidden="true" style="aspect-ratio:320/250">${PLACE[id]()}</svg>`;
@@ -1314,6 +1329,7 @@ Possible actions (use [] if nothing changes):
     if (!selected) return;
     const k = selected.cat.key, key = k + ":" + selected.id;
     const owned = state.owned.includes(key) || selected.price === 0;
+    if (k === "snack") { feedSnack(selected.id, selected.price); renderShop(); renderTry(); return; }
     if (k === "toy" && (owned || state.bananas >= selected.price)) {
       if (!owned) { state.bananas -= selected.price; bump(); addHappy(15); state.owned.push(key); rain(10); }
       playToy = selected.id; selected = null; persist(); renderShop(); renderStage(); renderTry();
@@ -1336,7 +1352,7 @@ Possible actions (use [] if nothing changes):
       $("tab-" + k).setAttribute("aria-selected", String(t === k));
       $("p-" + k).hidden = t !== k;
     }
-    $("feed").hidden = $("trick-btn").hidden = $("pick-btn").hidden = t === "shop";
+    $("pick-btn").hidden = t === "shop";
     if (t === "prog") renderProgress();
     if (t === "shop") { renderShop(); say(pick([`You have ${state.bananas} bananas. Spoil me?`, "Tap anything to try it on me!"])); } else greet();
     renderStage(); renderTry();
@@ -1511,14 +1527,14 @@ Possible actions (use [] if nothing changes):
   $("pick-btn2").onclick = pickOne;
 
   // Tricks unlock as he levels up
-  $("trick-btn").onclick = () => {
+  function doTrick() {
     const mine = TRICKS.filter(([, lv]) => level() >= lv);
     state.trickIdx = ((state.trickIdx || 0) + 1) % mine.length;
     const [name, , label] = mine[state.trickIdx];
     if (name === "wave") { wave(); say(mine.length === 1 ? "Hiii! Level up and I'll learn more tricks." : "Hiii!"); return; }
     trick = { name, start: performance.now(), dur: name === "dance" ? 3200 : 1300 };
     say(pick({ dance: ["Watch my moves!", "Dance party!"], jump: ["Boing boing!"], spin: ["Wheee!"], backflip: ["Ta-daaa!"] }[name]));
-  };
+  }
 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("focus").hidden) $("f-stop").click(); });
 
@@ -1528,7 +1544,7 @@ Possible actions (use [] if nothing changes):
   function setListening(on) {
     listening = on; $("mic-btn").classList.toggle("on", on);
     $("mic-btn").setAttribute("aria-label", on ? "Stop listening" : "Talk");
-    $("mic-hint").textContent = on ? "Listening… just talk." : "Tap the mic and talk.";
+    $("mic-hint").textContent = on ? "Listening… just talk." : "";
   }
   function startListening() {
     const status = $("status");
@@ -1649,8 +1665,8 @@ Possible actions (use [] if nothing changes):
       $("pip-btn").textContent = "Pop out";
     });
   }
-  if ("documentPictureInPicture" in window) { $("pip-btn").hidden = false; $("f-pip").hidden = false; }
-  $("pip-btn").onclick = popOut;
+  if ("documentPictureInPicture" in window) { $("pip-row").hidden = false; $("f-pip").hidden = false; }
+  $("pip-btn").onclick = () => { $("settings").hidden = true; popOut(); };
   $("f-pip").onclick = popOut;
 
   // =================== BORED: WALK AROUND AND PLAY ===================
@@ -1687,8 +1703,8 @@ Possible actions (use [] if nothing changes):
   // =================== PETTING ===================
   const PET_LINES = ["Hehehe, that tickles!", "Ooh, right there.", "More pets please!", "I love you too!", "Best human ever.", "*happy monkey noises*", "Okay one more… and one more…", "You're doing great, by the way."];
   const HEART_COLORS = ["#ff4f8b", "#ff7aa8", "#ffd23f", "#ef5a6b"];
-  function attachPet(box, bubbleId, render, baseMood) {
-    let down = false, lx = 0, ly = 0, dist = 0, petting = false, endT = null, lastBoop = 0, hearts = 0;
+  function attachPet(box, bubbleId, render, baseMood, onTap) {
+    let down = false, lx = 0, ly = 0, dist = 0, moved = 0, t0 = 0, petting = false, endT = null, lastBoop = 0, hearts = 0;
     const stage = box.parentElement;
     const onMonkey = (e) => { const m = box.querySelector(".m-bob"); if (!m) return false; const r = m.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
     function heartAt(e) {
@@ -1713,27 +1729,31 @@ Possible actions (use [] if nothing changes):
       endT = setTimeout(() => { petting = false; box.dataset.petting = ""; render(baseMood()); persist(); }, 1200);
     }
     box.addEventListener("pointerenter", (e) => { lx = e.clientX; ly = e.clientY; });
-    box.addEventListener("pointerdown", (e) => { if (!onMonkey(e)) return; down = true; lx = e.clientX; ly = e.clientY; dist = 0; pet(e); });
+    box.addEventListener("pointerdown", (e) => { if (!onMonkey(e)) return; down = true; lx = e.clientX; ly = e.clientY; dist = 0; moved = 0; t0 = Date.now(); });
     box.addEventListener("pointermove", (e) => {
       if (!(down || e.pointerType === "mouse") || !onMonkey(e)) { lx = e.clientX; ly = e.clientY; return; }
-      dist += Math.hypot(e.clientX - lx, e.clientY - ly); lx = e.clientX; ly = e.clientY;
+      const d = Math.hypot(e.clientX - lx, e.clientY - ly); dist += d; moved += d; lx = e.clientX; ly = e.clientY;
       if (dist > 40) { dist = 0; pet(e); }
     });
+    box.addEventListener("pointerup", (e) => {
+      if (down && moved < 12 && Date.now() - t0 < 400) { if (onTap) onTap(); else pet(e); }
+      down = false;
+    });
     const up = () => { down = false; };
-    box.addEventListener("pointerup", up); box.addEventListener("pointercancel", up); box.addEventListener("pointerleave", up);
+    box.addEventListener("pointercancel", up); box.addEventListener("pointerleave", up);
   }
-  attachPet($("scene"), "bubble", setHome, () => shownToy() || selected ? "wow" : levelMood());
+  attachPet($("scene"), "bubble", setHome, () => shownToy() || selected ? "wow" : levelMood(), () => doTrick());
 
   let eatT = null;
-  $("feed").onclick = () => {
+  function feedSnack(id = "banana", price = 1) {
     if (happy() >= 99) { say("I'm stuffed! Save your bananas for later."); return; }
-    if (state.bananas < 1) { say("No bananas left… lock in with me to earn some!"); return; }
-    state.bananas -= 1; bump(); addHappy(6); track("fed"); persist();
+    if (state.bananas < price) { say("Not enough bananas… lock in with me to earn some!"); return; }
+    state.bananas -= price; bump(); addHappy(SNACKS[id]?.happy || 6); track("fed"); persist();
     setHome("eat");
     say(pick(["Nom nom nom!", "Mmm, banana!", "Yummy! Thank you!"]));
     chime([520, 660, 780]);
     clearTimeout(eatT); eatT = setTimeout(() => setHome(selected ? "wow" : levelMood()), 1600);
-  };
+  }
   setInterval(renderMeter, 60000);
   attachPet($("fscene"), "fbubble", (m) => { $("fscene").innerHTML = scene(state.eq, m); }, () => "focus");
 
