@@ -118,6 +118,30 @@ button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px
 .keyrow { display: flex; gap: 8px; }
 .keyrow input { flex: 1; min-width: 0; font: 600 1rem var(--body); padding: 8px 10px; border: 3px solid var(--ink); border-radius: 12px; background: #fff; color: var(--ink); }
 
+/* talking, walking, toys, pop-out */
+@media (prefers-reduced-motion: no-preference) {
+  .m-talk { animation: flap .18s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center top; }
+  .walker { transition: transform 2.6s ease-in-out; }
+  .walking .m-bob { animation: hop .3s ease-in-out infinite alternate; }
+  .toy-bounce { animation: tbounce .6s cubic-bezier(.3, 0, .7, 1) infinite alternate; }
+  .toy-wobble { animation: twobble .5s ease-in-out infinite alternate; }
+  .toy-roll { animation: troll 1.4s ease-in-out infinite alternate; }
+  .toy-spin { animation: twobble .15s linear infinite alternate; }
+}
+.toy { transform-box: fill-box; transform-origin: center bottom; }
+@keyframes flap { from { transform: scaleY(.2); } to { transform: scaleY(1); } }
+@keyframes hop { to { transform: translateY(-7px) rotate(2deg); } }
+@keyframes tbounce { from { transform: translateY(0); } to { transform: translateY(-48px); } }
+@keyframes twobble { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
+@keyframes troll { from { transform: translateX(-26px); } to { transform: translateX(26px); } }
+.task.poof { animation: poof .45s ease-in forwards; }
+@keyframes poof { to { opacity: 0; transform: scale(.92); } }
+.topr { display: flex; gap: 8px; align-items: center; }
+.popbtn { background: var(--card); padding: 6px 12px 3px; font-size: 1rem; }
+.pipclock { position: absolute; top: 10px; right: 10px; z-index: 2; background: var(--ink); color: var(--banana); font: 800 1.05rem var(--display); padding: 3px 10px 1px; border-radius: 10px; font-variant-numeric: tabular-nums; }
+body.pip { padding: 8px; min-height: 100vh; display: flex; align-items: center; }
+body.pip .stage { width: 100%; }
+
 /* happiness */
 .meter { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
 .mheart svg { width: 34px; height: 34px; display: block; }
@@ -241,7 +265,7 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
 <div class="wrap">
   <div class="top">
     <h1 class="logo">Lock In<span>!</span></h1>
-    <div class="bank chunky" id="bank" aria-live="polite"><svg class="bico"><use href="#banana"/></svg><span id="bank-n">0</span></div>
+    <div class="topr"><button class="chunky popbtn" id="pip-btn" type="button" hidden>Pop out</button><div class="bank chunky" id="bank" aria-live="polite"><svg class="bico"><use href="#banana"/></svg><span id="bank-n">0</span></div></div>
   </div>
 
   <section class="card stage" id="stage" aria-label="Your monkey">
@@ -249,6 +273,7 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     <div class="bubble" id="bubble" role="status"></div>
     <div class="namebar" id="namebar"></div>
     <div class="streak" id="streak" hidden></div>
+    <div class="pipclock" id="pipclock" hidden></div>
   </section>
 
   <div class="card meter">
@@ -298,7 +323,6 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     </div>
     <ul class="tasks" id="tasks"></ul>
     <div class="rowtools" id="list-tools" hidden>
-      <button class="link" id="clear-done">Remove finished</button>
       <button class="link" id="clear-all">Start over</button>
     </div>
 
@@ -316,7 +340,7 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     </div>
     <div class="card how">
       <h3>Happy monkey</h3>
-      <p>Lock in, pet him, feed him, dress him up.</p>
+      <p>Lock in, pet him, feed him, dress him up, buy him toys.</p>
     </div>
     <div class="card how">
       <h3>Talk</h3>
@@ -350,12 +374,14 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     <button class="chunky fdone" id="f-done">I did it!</button>
     <button class="chunky" id="f-more">+5 min</button>
     <button class="chunky" id="f-stop">Take a break</button>
+    <button class="chunky" id="f-pip" type="button" hidden>Pop out</button>
   </div>
 </div>
 
 <script>
 (() => {
-  const $ = (id) => document.getElementById(id);
+  let pipWin = null;
+  const $ = (id) => document.getElementById(id) || (pipWin ? pipWin.document.getElementById(id) : null);
   const O = "#3a2416";
   const BAN = '<svg class="bico"><use href="#banana"/></svg>';
 
@@ -438,6 +464,14 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
       ${star(46, 64, 10, "#ffd23f")}<path d="M0 220Q160 200 320 220V250H0Z" fill="#c9c6dd" stroke="${O}" stroke-width="3"/><ellipse cx="60" cy="234" rx="16" ry="5" fill="#a9a5c2"/><ellipse cx="250" cy="236" rx="22" ry="6" fill="#a9a5c2"/>`,
   };
 
+  const TOYS = {
+    ball: () => `<g class="toy toy-bounce"><circle cx="0" cy="-15" r="15" fill="#ff7aa8" ${S}/><path d="M-14 -19Q0 -9 14 -19" fill="none" stroke="#fff" stroke-width="4"/><circle cx="0" cy="-15" r="15" fill="none" ${S}/><circle cx="-5" cy="-22" r="3" fill="#fff" opacity=".8"/></g>`,
+    duck: () => `<g class="toy toy-wobble"><ellipse cx="-2" cy="-12" rx="19" ry="12" fill="#ffd23f" ${S}/><circle cx="9" cy="-29" r="10" fill="#ffd23f" ${S}/><path d="M17 -31L27 -27L17 -24Z" fill="#ff9a3c" ${S}/><circle cx="11" cy="-31" r="2.2" fill="${O}"/><path d="M-12 -14Q-4 -6 4 -14" fill="none" stroke="#e8b400" stroke-width="3" stroke-linecap="round"/></g>`,
+    car: () => `<g class="toy toy-roll"><path d="M-12 -24Q-10 -38 0 -38H6Q13 -38 15 -24Z" fill="#ff9fb7" ${S}/><rect x="-25" y="-26" width="50" height="17" rx="7" fill="#ef5a6b" ${S}/><rect x="-6" y="-35" width="12" height="9" rx="2" fill="#aee4ff"/><circle cx="-13" cy="-8" r="7" fill="${O}"/><circle cx="13" cy="-8" r="7" fill="${O}"/><circle cx="-13" cy="-8" r="2.5" fill="#fff"/><circle cx="13" cy="-8" r="2.5" fill="#fff"/></g>`,
+    top: () => `<g class="toy toy-spin"><rect x="-3" y="-42" width="6" height="12" rx="3" fill="#5a4bd1" ${S}/><path d="M0 0L-20 -20Q0 -36 20 -20Z" fill="#7d6bff" ${S}/><path d="M-12 -24Q0 -30 12 -24" fill="none" stroke="#ffd23f" stroke-width="4"/></g>`,
+    teddy: () => `<g class="toy toy-wobble"><circle cx="-10" cy="-42" r="6" fill="#c98a4b" ${S}/><circle cx="10" cy="-42" r="6" fill="#c98a4b" ${S}/><ellipse cx="0" cy="-13" rx="15" ry="13" fill="#c98a4b" ${S}/><circle cx="0" cy="-33" r="12" fill="#c98a4b" ${S}/><ellipse cx="0" cy="-29" rx="5" ry="4" fill="#fde7c6"/><circle cx="-4" cy="-35" r="1.8" fill="${O}"/><circle cx="4" cy="-35" r="1.8" fill="${O}"/><ellipse cx="0" cy="-12" rx="7" ry="6" fill="#fde7c6"/></g>`,
+  };
+
   let uidN = 0;
   function monkey(eq, mood) {
     const uid = "m" + (++uidN);
@@ -464,6 +498,7 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     s += `<ellipse cx="66" cy="106" rx="9" ry="5.5" fill="#ff8fab" opacity=".65"/><ellipse cx="134" cy="106" rx="9" ry="5.5" fill="#ff8fab" opacity=".65"/>`;
     s += `<ellipse cx="95.5" cy="101" rx="2.6" ry="2" fill="${O}"/><ellipse cx="104.5" cy="101" rx="2.6" ry="2" fill="${O}"/>`;
     if (mood === "focus") s += `<path d="M93 113Q100 117 107 113" fill="none" ${S} stroke-linecap="round"/><path d="M73 66L90 71M127 66L110 71" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`;
+    else if (mood === "talk") s += `<g class="m-talk"><path d="M87 108Q100 130 113 108Z" fill="#7a2838" ${S}/><path d="M93 119Q100 114 107 119Q100 125 93 119Z" fill="#ff8fab"/></g>`;
     else if (mood === "wow" || mood === "pet" || mood === "eat") s += `<path d="M87 108Q100 132 113 108Z" fill="#7a2838" ${S}/><path d="M93 119Q100 114 107 119Q100 126 93 119Z" fill="#ff8fab"/>`;
     else if (mood === "sad") s += `<path d="M90 116Q100 106 110 116" fill="none" ${S} stroke-linecap="round"/><path d="M74 70L89 65M126 70L111 65" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/><path d="M76 96q-4 7 0 9q4-2 0-9Z" fill="#7cc8ff" stroke="${O}" stroke-width="1.5"/>`;
     else if (mood === "meh") s += `<path d="M92 113H108" ${S} stroke-linecap="round"/>`;
@@ -474,8 +509,8 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     if (eq.hat && HATS[eq.hat]) s += HATS[eq.hat]();
     return `<defs><clipPath id="${uid}"><ellipse cx="100" cy="172" rx="44" ry="42"/></clipPath></defs><g class="m-bob${mood === "pet" ? " m-wiggle" : ""}">${s}</g>`;
   }
-  const scene = (eq, mood) =>
-    `<svg class="scene" viewBox="0 0 320 250" role="img" aria-label="Your monkey">${(PLACE[eq.place] || PLACE.jungle)()}<g transform="translate(128 24) scale(.9)">${monkey(eq, mood)}</g></svg>`;
+  const scene = (eq, mood, o = {}) =>
+    `<svg class="scene" viewBox="0 0 320 250" role="img" aria-label="Your monkey">${(PLACE[eq.place] || PLACE.jungle)()}<g class="walker" style="transform: translate(${o.x || 0}px, 0px)">${o.toy && TOYS[o.toy] ? `<g transform="translate(${(o.x || 0) < -60 ? 318 : 140} 222)">${TOYS[o.toy]()}</g>` : ""}<g transform="translate(128 24) scale(.9)">${monkey(eq, mood)}</g></g></svg>`;
 
   // =================== SHOP ===================
   const CATS = [
@@ -494,6 +529,8 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
       ["pink", "Bubblegum", 60], ["blue", "Sky blue", 60], ["mint", "Mint", 60], ["gold", "Golden", 150]] },
     { key: "place", label: "Places", view: null, items: [
       ["jungle", "Jungle", 0], ["beach", "Beach", 60], ["bedroom", "Bedroom", 60], ["space", "Outer space", 120]] },
+    { key: "toy", label: "Toys", view: null, items: [
+      ["ball", "Bouncy ball", 0], ["duck", "Rubber duck", 25], ["top", "Spinning top", 30], ["car", "Toy car", 40], ["teddy", "Teddy bear", 60]] },
   ];
   const ALWAYS = new Set(["fur", "place"]); // can't take these off
   const findItem = (cat, id) => { const c = CATS.find(c => c.key === cat); const it = c && c.items.find(i => i[0] === id); return it ? { cat: c, id, name: it[1], price: it[2] } : null; };
@@ -581,7 +618,11 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
 
   // =================== MONKEY TALK ===================
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
-  function say(text, where = "bubble") { $(where).textContent = text; }
+  let bubbleT = null;
+  function say(text, where = "bubble") {
+    const b = $(where); b.textContent = text; b.hidden = false;
+    if (where === "bubble") { clearTimeout(bubbleT); bubbleT = setTimeout(() => { if (!listening && !chatBusy && !speakingNow) b.hidden = true; }, 9000); }
+  }
   const FOCUS_LINES = [
     "We're locked in. Just the next tiny step.", "You're doing it! I'm right here.", "Phone face down. Eyes on the task.",
     "Every minute is a banana. Keep going!", "Messy progress still counts.", "Ooh, look at you go.",
@@ -642,7 +683,8 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
     if (voiceUnlocked || !voiceOn() || !window.speechSynthesis) return;
     try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); voiceUnlocked = true; } catch {}
   }
-  function talking(on) { if (!editingName) $("scene").innerHTML = scene(previewEq(), on ? "wow" : levelMood()); }
+  let speakingNow = false;
+  function talking(on) { speakingNow = on; setHome(on ? "talk" : levelMood()); }
   function speak(text) {
     if (!voiceOn() || !window.speechSynthesis) return false;
     try {
@@ -691,6 +733,7 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-directio
       } else if (a.type === "done" && t && !t.done) {
         t.done = true; done++;
         if (!t.paid) { t.paid = true; addBananas(3); addHappy(3); }
+        state.tasks = state.tasks.filter(x => x !== t);
       } else if (a.type === "delete" && t) {
         state.tasks = state.tasks.filter(x => x !== t);
       } else if (a.type === "start" && t && !t.done) {
@@ -798,10 +841,13 @@ Possible actions (use [] if nothing changes):
       check.setAttribute("aria-label", (t.done ? "Mark not done: " : "Mark done: ") + t.title);
       check.innerHTML = t.done ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>' : "";
       check.onclick = () => {
-        t.done = !t.done;
-        if (t.done && !t.paid && !t.example) { t.paid = true; addBananas(3); addHappy(3); toast(`${BAN} +3 for checking it off`); }
-        if (t.done) say(pick(["Yesss! One down.", "Look at you go!", "Checked! Proud of you."]));
-        persist(); renderTasks();
+        if (t.done) return;
+        t.done = true;
+        if (!t.paid && !t.example) { t.paid = true; addBananas(3); addHappy(3); toast(`${BAN} +3 for checking it off`); }
+        say(pick(["Yesss! One down.", "Look at you go!", "Checked! Proud of you."]));
+        li.classList.add("is-done", "poof");
+        check.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
+        setTimeout(() => { state.tasks = state.tasks.filter(x => x !== t); persist(); renderTasks(); }, 450);
       };
       const body = el("div", "tbody");
       body.append(el("span", "title", t.title));
@@ -826,11 +872,13 @@ Possible actions (use [] if nothing changes):
   }
 
   // =================== RENDER: STAGE + SHOP ===================
-  let tab = "todo", shopCat = "hat", selected = null, editingName = false;
+  let tab = "todo", shopCat = "hat", selected = null, editingName = false, walkX = 0, playToy = null;
+  const shownToy = () => (selected && selected.cat.key === "toy") ? selected.id : playToy;
+  function setHome(mood) { $("scene").innerHTML = scene(previewEq(), mood, { x: walkX, toy: shownToy() }); }
   const previewEq = () => selected ? { ...state.eq, [selected.cat.key]: selected.id } : state.eq;
 
   function renderStage() {
-    $("scene").innerHTML = scene(previewEq(), selected ? "wow" : levelMood());
+    setHome(shownToy() ? "wow" : selected ? "wow" : levelMood());
     const nb = $("namebar"); nb.replaceChildren();
     if (editingName) {
       const inp = el("input", "nameinput"); inp.id = "name-input"; inp.value = state.name; inp.maxLength = 16; inp.setAttribute("aria-label", "Monkey name");
@@ -863,7 +911,7 @@ Possible actions (use [] if nothing changes):
       if (ALWAYS.has(selected.cat.key)) { act.textContent = "Wearing"; act.disabled = true; } else { act.classList.add("off"); act.textContent = "Take off"; }
     } else if (owned) {
       what.append(el("small", null, "You own this"));
-      act.textContent = selected.cat.key === "place" ? "Go here" : "Wear it";
+      act.textContent = selected.cat.key === "place" ? "Go here" : selected.cat.key === "toy" ? "Play!" : "Wear it";
     } else {
       const need = selected.price - state.bananas;
       what.append(el("small", null, need > 0 ? `You need ${need} more banana${need === 1 ? "" : "s"}` : "Trying it on"));
@@ -886,7 +934,8 @@ Possible actions (use [] if nothing changes):
       const wearing = state.eq[c.key] === id;
       const t = el("button", "tile" + (wearing ? " wearing" : "") + (owned ? "" : " locked") + (selected && selected.cat.key === c.key && selected.id === id ? " sel" : ""));
       const eq = { fur: state.eq.fur, place: state.eq.place, hat: null, glasses: null, neck: null, shirt: null, [c.key]: id };
-      t.innerHTML = c.view
+      t.innerHTML = c.key === "toy" ? `<svg class="thumb" viewBox="-36 -56 72 72" aria-hidden="true">${TOYS[id]().replace(/ class="toy [^"]*"/, "")}</svg>`
+        : c.view
         ? `<svg class="thumb" viewBox="${c.view}" aria-hidden="true">${monkey(eq, "happy").replace('class="m-bob"', "")}</svg>`
         : `<svg class="thumb" viewBox="0 0 320 250" aria-hidden="true" style="aspect-ratio:320/250">${PLACE[id]()}</svg>`;
       t.append(el("span", "tn", name));
@@ -907,6 +956,12 @@ Possible actions (use [] if nothing changes):
     if (!selected) return;
     const k = selected.cat.key, key = k + ":" + selected.id;
     const owned = state.owned.includes(key) || selected.price === 0;
+    if (k === "toy" && (owned || state.bananas >= selected.price)) {
+      if (!owned) { state.bananas -= selected.price; bump(); addHappy(15); state.owned.push(key); rain(10); }
+      playToy = selected.id; selected = null; persist(); renderShop(); renderStage(); renderTry();
+      say(pick(["Wheee!", "Best toy ever!", "Hehe, watch this!"]));
+      return;
+    }
     if (state.eq[k] === selected.id) { if (!ALWAYS.has(k)) state.eq[k] = null; say("Okay, back to basics."); }
     else if (owned) { state.eq[k] = selected.id; say(pick(["How do I look?", "I love it!", "Looking good, feeling good."])); }
     else if (state.bananas >= selected.price) {
@@ -964,6 +1019,7 @@ Possible actions (use [] if nothing changes):
     const left = endAt - Date.now(), over = left < 0, s = Math.floor(Math.abs(left) / 1000);
     $("clock").textContent = (over ? "+" : "") + String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
     $("clock").classList.toggle("over", over);
+    $("pipclock").textContent = $("clock").textContent; $("pipclock").hidden = false;
     if (over && !beeped) { beeped = true; chime([660, 880, 660]); say(`Time's up! Finished? Or tap +5 min and keep going.`, "fbubble"); }
     payMinutes();
   }
@@ -985,7 +1041,7 @@ Possible actions (use [] if nothing changes):
   }
   function endFocus() {
     clearInterval(tick); clearInterval(lineT); tick = lineT = null;
-    $("focus").hidden = true; $("focus").classList.remove("focusing");
+    $("focus").hidden = true; $("focus").classList.remove("focusing"); $("pipclock").hidden = true;
     try { wake?.release(); } catch {} wake = null;
   }
   $("f-done").onclick = () => {
@@ -999,6 +1055,7 @@ Possible actions (use [] if nothing changes):
       ft.paid = true;
     }
     ft.done = true;
+    state.tasks = state.tasks.filter(x => x !== ft);
     if (bonus) addBananas(bonus);
     addHappy(8);
     const total = sessionEarned + bonus;
@@ -1069,13 +1126,70 @@ Possible actions (use [] if nothing changes):
   $("key-change").onclick = () => { setTab("todo"); $("keybox").hidden = false; $("key-input").focus(); };
   if (!getKey()) $("keybox").hidden = false;
 
+  // =================== POP OUT (floats over every Chrome tab) ===================
+  async function popOut() {
+    if (!("documentPictureInPicture" in window)) { toast("Pop out works in Chrome on a computer."); return; }
+    if (pipWin) { pipWin.close(); return; }
+    let w;
+    try { w = await documentPictureInPicture.requestWindow({ width: 340, height: 300 }); } catch { return; }
+    const d = w.document;
+    document.querySelectorAll('link[rel="stylesheet"], style').forEach(n => d.head.append(n.cloneNode(true)));
+    d.title = state.name;
+    d.body.className = "pip";
+    d.body.append(document.querySelector("svg[aria-hidden]").cloneNode(true));
+    const stage = $("stage"), home = stage.parentNode, next = stage.nextSibling;
+    pipWin = w;
+    d.body.append(stage);
+    $("pip-btn").textContent = "Bring back";
+    say(pick(["Wheee, I'm floating! I'll follow you around.", "I'm on top of everything now. Go do your thing!"]));
+    w.addEventListener("pagehide", () => {
+      home.insertBefore(stage, next);
+      pipWin = null;
+      $("pip-btn").textContent = "Pop out";
+    });
+  }
+  if ("documentPictureInPicture" in window) { $("pip-btn").hidden = false; $("f-pip").hidden = false; }
+  $("pip-btn").onclick = popOut;
+  $("f-pip").onclick = popOut;
+
+  // =================== BORED: WALK AROUND AND PLAY ===================
+  let lastAct = Date.now(), boredStep = 0;
+  const BORED = ["walk", "play", "play", "walk", "rest"];
+  ["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, () => {
+    lastAct = Date.now();
+    if (playToy) { playToy = null; setHome(levelMood()); }
+  }, true));
+  const canIdle = () => !selected && $("focus").hidden && !listening && !chatBusy && !speakingNow && !editingName
+    && $("scene").dataset.petting !== "1" && (document.visibilityState === "visible" || pipWin);
+  setInterval(() => {
+    if (!canIdle() || Date.now() - lastAct < 15000) return;
+    const step = BORED[boredStep++ % BORED.length];
+    if (step === "walk") {
+      walkX = -Math.round(Math.random() * 125);
+      if (playToy) { playToy = null; setHome(levelMood()); }
+      const w = $("scene").querySelector(".walker"), st = $("stage");
+      st.classList.add("walking");
+      requestAnimationFrame(() => { w.style.transform = `translate(${walkX}px, 0px)`; });
+      setTimeout(() => st.classList.remove("walking"), 2600);
+    } else if (step === "play") {
+      if (!playToy) {
+        const mine = CATS.find(c => c.key === "toy").items.filter(([id, , price]) => price === 0 || state.owned.includes("toy:" + id)).map(i => i[0]);
+        playToy = pick(mine);
+        setHome("wow");
+        if (Math.random() < 0.5) say(pick(["Wheee!", "La la la…", "Hehe, this is fun.", "So bored… wanna lock in with me?", "Bet you can't do one task before I finish playing!"]));
+      }
+    } else {
+      playToy = null; setHome(levelMood());
+    }
+  }, 5000);
+
   // =================== PETTING ===================
   const PET_LINES = ["Hehehe, that tickles!", "Ooh, right there.", "More pets please!", "I love you too!", "Best human ever.", "*happy monkey noises*", "Okay one more… and one more…", "You're doing great, by the way."];
   const HEART_COLORS = ["#ff4f8b", "#ff7aa8", "#ffd23f", "#ef5a6b"];
-  function attachPet(box, bubbleId, getEq, baseMood) {
+  function attachPet(box, bubbleId, render, baseMood) {
     let down = false, lx = 0, ly = 0, dist = 0, petting = false, endT = null, lastBoop = 0, hearts = 0;
     const stage = box.parentElement;
-    const onMonkey = (e) => { const r = box.getBoundingClientRect(); const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height; return fx > 0.38 && fx < 0.98 && fy > 0.1 && fy < 0.98; };
+    const onMonkey = (e) => { const m = box.querySelector(".m-bob"); if (!m) return false; const r = m.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
     function heartAt(e) {
       const r = stage.getBoundingClientRect();
       const h = document.createElement("div"); h.className = "heart";
@@ -1091,11 +1205,11 @@ Possible actions (use [] if nothing changes):
       if (state.petGain.n < 25) { state.petGain.n++; addHappy(1); }
       const now = Date.now();
       if (now - lastBoop > 160) { lastBoop = now; chime([700 + Math.random() * 500]); }
-      if (!petting) { petting = true; hearts = 0; box.innerHTML = scene(getEq(), "pet"); say(pick(PET_LINES), bubbleId); }
+      if (!petting) { petting = true; box.dataset.petting = "1"; hearts = 0; render("pet"); say(pick(PET_LINES), bubbleId); }
       else if (state.pets % 100 === 0) say(`That's ${state.pets} pets! I feel so loved.`, bubbleId);
       else if (hearts % 12 === 0) say(pick(PET_LINES), bubbleId);
       clearTimeout(endT);
-      endT = setTimeout(() => { petting = false; box.innerHTML = scene(getEq(), baseMood()); persist(); }, 1200);
+      endT = setTimeout(() => { petting = false; box.dataset.petting = ""; render(baseMood()); persist(); }, 1200);
     }
     box.addEventListener("pointerenter", (e) => { lx = e.clientX; ly = e.clientY; });
     box.addEventListener("pointerdown", (e) => { if (!onMonkey(e)) return; down = true; lx = e.clientX; ly = e.clientY; dist = 0; pet(e); });
@@ -1107,20 +1221,20 @@ Possible actions (use [] if nothing changes):
     const up = () => { down = false; };
     box.addEventListener("pointerup", up); box.addEventListener("pointercancel", up); box.addEventListener("pointerleave", up);
   }
-  attachPet($("scene"), "bubble", previewEq, () => selected ? "wow" : levelMood());
+  attachPet($("scene"), "bubble", setHome, () => shownToy() || selected ? "wow" : levelMood());
 
   let eatT = null;
   $("feed").onclick = () => {
     if (happy() >= 99) { say("I'm stuffed! Save your bananas for later."); return; }
     if (state.bananas < 1) { say("No bananas left… lock in with me to earn some!"); return; }
     state.bananas -= 1; bump(); addHappy(6); persist();
-    $("scene").innerHTML = scene(previewEq(), "eat");
+    setHome("eat");
     say(pick(["Nom nom nom!", "Mmm, banana!", "Yummy! Thank you!"]));
     chime([520, 660, 780]);
-    clearTimeout(eatT); eatT = setTimeout(() => { $("scene").innerHTML = scene(previewEq(), selected ? "wow" : levelMood()); }, 1600);
+    clearTimeout(eatT); eatT = setTimeout(() => setHome(selected ? "wow" : levelMood()), 1600);
   };
   setInterval(renderMeter, 60000);
-  attachPet($("fscene"), "fbubble", () => state.eq, () => "focus");
+  attachPet($("fscene"), "fbubble", (m) => { $("fscene").innerHTML = scene(state.eq, m); }, () => "focus");
 
   // =================== WIRING ===================
   $("composer").addEventListener("submit", (e) => { e.preventDefault(); chatSend(); });
@@ -1128,7 +1242,6 @@ Possible actions (use [] if nothing changes):
   $("voice-btn").onclick = () => { state.voice = !voiceOn(); if (!state.voice) try { speechSynthesis.cancel(); } catch {} else unlockVoice(); persist(); renderLog(); };
   $("newchat-btn").onclick = () => { state.chat = []; persist(); renderLog(); greet(); };
   $("clear-examples").onclick = () => { state.tasks = state.tasks.filter(t => !t.example); persist(); renderTasks(); greet(); $("dump").focus(); };
-  $("clear-done").onclick = () => { state.tasks = state.tasks.filter(t => !t.done); persist(); renderTasks(); };
   let arm = null;
   $("clear-all").onclick = (e) => {
     const b = e.currentTarget;
@@ -1138,6 +1251,7 @@ Possible actions (use [] if nothing changes):
   };
 
   function renderAll() {
+    state.tasks = state.tasks.filter(t => !t.done);
     $("bank-n").textContent = state.bananas;
     renderMeter(); renderStage(); renderLog(); renderTasks(); if (tab === "shop") renderShop(); renderTry();
     if (!ft) greet();
