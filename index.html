@@ -133,6 +133,8 @@ button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px
 .keybox a { color: var(--ink); font-weight: 800; }
 .keyrow { display: flex; gap: 8px; }
 .keyrow input { flex: 1; min-width: 0; font: 600 1rem var(--body); padding: 9px 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); }
+.brainbar { height: 10px; border-radius: 99px; background: rgba(58, 36, 22, .12); overflow: hidden; }
+.brainbar i { display: block; height: 100%; width: 0; background: var(--green); transition: width .3s; }
 .keyrow button { padding: 9px 16px 7px; background: var(--banana); box-shadow: 0 3px 0 var(--banana-d); }
 
 /* tasks */
@@ -309,9 +311,10 @@ body.pip .bubble { top: 60px; }
   <section class="sheet">
     <div class="panel" id="p-home" role="tabpanel" aria-labelledby="tab-home">
       <div class="keybox" id="keybox" hidden>
-        <b>Give Bongo his brain</b>
-        <span>Paste your Claude API key from <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. It stays on this device.</span>
-        <div class="keyrow"><input id="key-input" type="password" autocomplete="off" placeholder="sk-ant-…" aria-label="Claude API key"><button class="chunky" id="key-save" type="button">Save</button></div>
+        <b>Download Bongo's brain</b>
+        <span id="brain-msg">One time, about 700 MB, so use Wi-Fi. It's free, runs on your device, and your chats never leave it.</span>
+        <div class="brainbar" id="brain-bar" hidden><i id="brain-fill"></i></div>
+        <div class="keyrow"><button class="chunky" id="key-save" type="button">Download</button></div>
       </div>
       <div class="scroll"><div class="log" id="log" aria-live="polite"></div></div>
       <p class="status" id="status" role="status"></p>
@@ -351,7 +354,7 @@ body.pip .bubble { top: 60px; }
     <div class="row"><span>Hands-free<small>Mic turns back on after he answers</small></span><button class="switch" id="hands-btn" type="button" aria-pressed="false" aria-label="Hands-free"></button></div>
     <div class="row"><span>Conversation</span><button class="link" id="newchat-btn" type="button">Start fresh</button></div>
     <div class="row" id="list-tools"><span>Task list</span><button class="link" id="clear-all" type="button">Clear everything</button></div>
-    <div class="row"><span>Claude API key</span><button class="link" id="key-change" type="button">Change</button></div>
+    <div class="row"><span>Bongo's brain<small id="brain-state">Not downloaded</small></span><button class="link" id="key-change" type="button">Download</button></div>
     <div class="earn">
       <h3>Bananas</h3>
       <ul><li>+1 every minute locked in</li><li>+10 finish a task, +5 if you beat the timer</li><li>+10 first lock-in of the day</li></ul>
@@ -590,33 +593,88 @@ body.pip .bubble { top: 60px; }
     } catch {}
   })();
 
-  // Claude API, called straight from this page with the key saved on this device.
-  const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.129.0/+esm";
-  const KEY_LS = "lockin.apikey";
-  const getKey = () => { try { return localStorage.getItem(KEY_LS) || ""; } catch { return ""; } };
-  let client = null;
-  async function askClaude(prompt) {
-    const apiKey = getKey();
-    if (!apiKey) throw { code: "no_key" };
-    if (!client) {
-      const { default: Anthropic } = await import(SDK_URL);
-      client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
-    }
-    const res = await client.beta.messages.create({
-      model: "claude-opus-5-5",
-      max_tokens: 4000,
-      output_config: { effort: "low" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+  // Bongo's brain: a small AI model (Llama 3.2 1B) that runs right on this device with WebLLM.
+  // Free, no account, works offline after the first download, chats never leave the device.
+  const WEBLLM_URL = "https://esm.run/@mlc-ai/web-llm@0.2.85";
+  const BRAIN_LS = "lockin.brain";
+  const REPLY_SCHEMA = {
+    type: "object",
+    properties: {
+      reply: { type: "string" },
+      actions: { type: "array", items: { type: "object", properties: {
+        type: { type: "string", enum: ["add", "update", "done", "delete", "start"] },
+        id: { type: "string" }, title: { type: "string" }, minutes: { type: "integer" },
+        priority: { type: "string", enum: ["now", "soon", "later"] }, firstStep: { type: "string" }, start: { type: "boolean" },
+      }, required: ["type"] } },
+    },
+    required: ["reply", "actions"],
+  };
+  let webllm = null, engine = null, brainLoading = null, modelId = null;
+  const brainDownloaded = () => { try { return localStorage.getItem(BRAIN_LS) === "1"; } catch { return false; } };
+  async function pickModel() {
+    const adapter = navigator.gpu ? await navigator.gpu.requestAdapter() : null;
+    if (!adapter) return null;
+    return adapter.features.has("shader-f16") ? "Llama-3.2-1B-Instruct-q4f16_1-MLC" : "Llama-3.2-1B-Instruct-q4f32_1-MLC";
+  }
+  function brainProgress(text, frac) {
+    $("brain-msg").textContent = text;
+    $("brain-bar").hidden = frac == null;
+    if (frac != null) $("brain-fill").style.width = Math.round(frac * 100) + "%";
+  }
+  function renderBrainState() {
+    const d = brainDownloaded();
+    $("brain-state").textContent = engine ? "Ready, on this device" : d ? "Downloaded" : "Not downloaded";
+    $("key-change").textContent = d ? "Delete" : "Download";
+  }
+  function loadBrain() {
+    if (engine) return Promise.resolve(engine);
+    if (brainLoading) return brainLoading;
+    const first = !brainDownloaded();
+    brainLoading = (async () => {
+      if (first) { $("keybox").hidden = false; $("key-save").hidden = true; }
+      try {
+        modelId = await pickModel();
+        if (!modelId) throw { code: "no_gpu" };
+        webllm = webllm || await import(WEBLLM_URL);
+        brainProgress(first ? "Downloading… keep this screen open." : "Waking up…", 0);
+        if (!first) $("mic-hint").textContent = "Waking up Bongo's brain…";
+        engine = await webllm.CreateMLCEngine(modelId, {
+          initProgressCallback: (r) => {
+            const pct = Math.round((r.progress || 0) * 100);
+            brainProgress((first ? "Downloading… " : "Waking up… ") + pct + "%", r.progress || 0);
+            if (!first) $("mic-hint").textContent = `Waking up Bongo's brain… ${pct}%`;
+          },
+        });
+        try { localStorage.setItem(BRAIN_LS, "1"); } catch {}
+        $("keybox").hidden = true; $("mic-hint").textContent = "Tap the mic and talk.";
+        renderBrainState();
+        return engine;
+      } catch (e) {
+        engine = null;
+        $("keybox").hidden = false; $("key-save").hidden = false; $("key-save").textContent = "Try again";
+        brainProgress(e?.code === "no_gpu"
+          ? "This browser can't run Bongo's brain. On iPhone, update to the newest iOS and use Safari. On a Mac, use Chrome or the newest Safari."
+          : "The download got interrupted. Check your Wi-Fi and try again.", null);
+        $("mic-hint").textContent = "Tap the mic and talk.";
+        throw e;
+      } finally { brainLoading = null; }
+    })();
+    return brainLoading;
+  }
+  async function askLocal(prompt) {
+    const eng = await loadBrain();
+    const res = await eng.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
+      temperature: 0.6,
+      max_tokens: 500,
+      response_format: { type: "json_object", schema: JSON.stringify(REPLY_SCHEMA) },
     });
-    if (res.stop_reason === "refusal") return { reply: "Hmm, let's talk about something else. What's next on your list?", actions: [] };
-    const text = res.content.filter(b => b.type === "text").map(b => b.text).join("");
+    const text = res.choices?.[0]?.message?.content || "";
     const m = text.match(/\{[\s\S]*\}/);
     if (!m) throw { code: "invalid_json" };
     return JSON.parse(m[0]);
   }
-  const sample = { json: askClaude };
+  const sample = { json: askLocal };
 
   // =================== MONKEY TALK ===================
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -720,9 +778,10 @@ body.pip .bubble { top: 60px; }
   const PRIOS = ["now", "soon", "later"];
   function applyActions(acts) {
     let startId = null, added = 0, done = 0;
+    const numbered = state.tasks.slice();
     for (const a of acts.slice(0, 30)) {
       if (!a || typeof a !== "object") continue;
-      const t = a.id != null ? state.tasks.find(x => x.id === String(a.id)) : null;
+      const t = a.id != null ? (numbered[Number(a.id) - 1] || state.tasks.find(x => x.id === String(a.id))) : null;
       if (a.type === "add" && a.title) {
         const nt = { id: newId(), title: String(a.title).slice(0, 120), minutes: mins5(a.minutes), priority: PRIOS.includes(a.priority) ? a.priority : "soon", firstStep: a.firstStep ? String(a.firstStep).slice(0, 160) : "", done: false };
         state.tasks.push(nt); added++;
@@ -752,14 +811,14 @@ body.pip .bubble { top: 60px; }
     status.classList.remove("err"); status.textContent = "";
     if (!text || chatBusy) return;
     unlockVoice();
-    if (!getKey()) { $("keybox").hidden = false; $("key-input").focus(); say("I need my brain first! Paste your Claude API key above."); return; }
+    if (!engine && !brainDownloaded()) { $("keybox").hidden = false; say("I need my brain first! Tap Download above."); return; }
     chatBusy = true; $("plan-btn").disabled = true;
     if (state.tasks.some(t => t.example)) state.tasks = state.tasks.filter(t => !t.example);
     pushChat("me", text); input.value = "";
     typing = true; renderLog(); renderTasks();
     say(pick(["Hmm…", "Ooh, okay…", "Thinking…"]));
     const history = (state.chat || []).slice(-13, -1).map(m => (m.who === "me" ? "Them: " : "You: ") + m.text).join("\n") || "(start of conversation)";
-    const list = state.tasks.map(t => `${t.id} | ${t.title} | ${t.minutes}m | ${t.priority} | ${t.done ? "done" : "open"}`).join("\n") || "(empty)";
+    const list = state.tasks.map((t, i) => `${i + 1} | ${t.title} | ${t.minutes}m | ${t.priority} | ${t.done ? "done" : "open"}`).join("\n") || "(empty)";
     const prompt =
 `You are ${state.name}, a cute, upbeat monkey sidekick in an app called Lock In. You help a person with ADHD plan and actually do their stuff. You chat with them and you manage their to-do list.
 
@@ -776,7 +835,7 @@ How you help:
 
 Right now: ${new Date().toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" })}. They have ${state.bananas} bananas. Your happiness is ${Math.round(happy())}%.
 
-Their current tasks (id | title | minutes | priority | status):
+Their current tasks (number | title | minutes | priority | status):
 ${list}
 
 Recent conversation:
@@ -789,10 +848,10 @@ Reply with only JSON in this shape:
 {"reply":"what you say out loud","actions":[]}
 Possible actions (use [] if nothing changes):
 {"type":"add","title":"...","minutes":15,"priority":"now|soon|later","firstStep":"...","start":false}
-{"type":"update","id":"<id>","title":"...","minutes":20,"priority":"soon","firstStep":"..."}  (include only fields that change)
-{"type":"done","id":"<id>"}
-{"type":"delete","id":"<id>"}
-{"type":"start","id":"<id>"}  (starts a Lock In timer; at most one per reply. For a brand-new task use "start":true on its add action instead.)`;
+{"type":"update","id":"<number>","title":"...","minutes":20,"priority":"soon","firstStep":"..."}  (include only fields that change)
+{"type":"done","id":"<number>"}
+{"type":"delete","id":"<number>"}
+{"type":"start","id":"<number>"}  (starts a Lock In timer; at most one per reply. For a brand-new task use "start":true on its add action instead.)`;
     try {
       const out = await sample.json(prompt, { modelTier: "default", cache: false });
       const reply = String(out?.reply || "Okay!").slice(0, 500);
@@ -808,11 +867,8 @@ Possible actions (use [] if nothing changes):
     } catch (e) {
       typing = false; renderLog();
       status.classList.add("err");
-      status.textContent = e?.status === 401 ? "That API key didn't work. Change it in Settings, then try again."
-        : e?.status === 402 || /credit|billing/i.test(e?.message || "") ? "Your Claude account is out of credit. Add some at console.anthropic.com."
-        : e?.status === 429 ? "Too many messages right now. Wait a minute and try again."
-        : e?.code === "rate_limited" ? "Too many messages right now. Wait a minute and try again."
-        : "Something went wrong. Try sending that again.";
+      status.textContent = e?.code === "no_gpu" ? "This device can't run Bongo's brain. See the message above."
+        : brainDownloaded() || engine ? "My brain got confused. Try saying that again." : "Download my brain first (above).";
       say("Oops, I slipped on a banana peel. Say that again?");
     } finally {
       chatBusy = false; $("plan-btn").disabled = false;
@@ -1118,13 +1174,21 @@ Possible actions (use [] if nothing changes):
   $("mic-btn").onclick = () => { if (listening) { try { rec.stop(); } catch {} } else startListening(); };
   $("hands-btn").onclick = () => { handsFree = !handsFree; renderHands(); if (handsFree) startListening(); else if (listening) try { rec.abort(); } catch {} };
   $("key-save").onclick = () => {
-    const k = $("key-input").value.trim();
-    if (!k) return;
-    try { localStorage.setItem(KEY_LS, k); } catch {}
-    client = null; $("key-input").value = ""; $("keybox").hidden = true;
-    say("Brain installed! Tap the mic and tell me what's going on.");
+    loadBrain().then(() => say("Ooh, I can think! Tap the mic and tell me what's going on.")).catch(() => {});
   };
-  $("key-change").onclick = () => { $("settings").hidden = true; setTab("home"); $("keybox").hidden = false; $("key-input").focus(); };
+  $("key-change").onclick = async () => {
+    if (!brainDownloaded()) { $("settings").hidden = true; setTab("home"); $("key-save").click(); return; }
+    try {
+      webllm = webllm || await import(WEBLLM_URL);
+      try { await engine?.unload(); } catch {}
+      engine = null;
+      await webllm.deleteModelAllInfoInCache(modelId || await pickModel());
+    } catch {}
+    try { localStorage.removeItem(BRAIN_LS); } catch {}
+    renderBrainState();
+    $("key-save").textContent = "Download"; brainProgress("One time, about 700 MB, so use Wi-Fi. It's free, runs on your device, and your chats never leave it.", null);
+    $("keybox").hidden = false;
+  };
   $("settings-btn").onclick = () => { $("settings").hidden = false; };
   $("settings-done").onclick = () => { $("settings").hidden = true; };
   $("settings").addEventListener("click", (e) => { if (e.target.id === "settings") $("settings").hidden = true; });
@@ -1137,7 +1201,9 @@ Possible actions (use [] if nothing changes):
     $("qa-input").value = ""; persist(); renderTasks();
     say(pick(["Got it!", "Added!", "On the list."]));
   });
-  if (!getKey()) $("keybox").hidden = false;
+  renderBrainState();
+  if (!brainDownloaded()) $("keybox").hidden = false;
+  else setTimeout(() => loadBrain().catch(() => {}), 1200);
 
   // =================== POP OUT (floats over every Chrome tab) ===================
   async function popOut() {
