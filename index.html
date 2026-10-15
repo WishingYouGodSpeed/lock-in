@@ -419,6 +419,7 @@ body.pip .bubble { top: 60px; }
       <ul><li>+1 every minute locked in</li><li>+10 finish a task, +5 if you beat the timer</li><li>+10 first lock-in of the day</li></ul>
     </div>
     <p class="foot" id="foot">Saved on this device.</p>
+    <p class="foot" id="app-version"></p>
     <button class="chunky done-btn" id="settings-done" type="button">Done</button>
   </div>
 </div>
@@ -448,7 +449,7 @@ body.pip .bubble { top: 60px; }
 
 <script>
 // Auto-update: if the site has a newer version than this saved copy, reload once to get it.
-const APP_VERSION = "11";
+const APP_VERSION = "12";
 (async () => {
   try {
     const res = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -967,6 +968,43 @@ const APP_VERSION = "11";
     return startId;
   }
 
+  // Reads tasks straight out of what you said ("I need to do laundry, study and call mom at 5"),
+  // so tasks always get added even when the small AI gets confused.
+  function guessMinutes(t) {
+    if (/\b(call|text|email|reply|message|pay|book|order|send)\b/.test(t)) return 10;
+    if (/\b(dishes|trash|bed|shower|feed)\b/.test(t)) return 15;
+    if (/\b(homework|essay|study|studying|project|report|paper|exam|test|assignment|read)\b/.test(t)) return 45;
+    if (/\b(gym|workout|run|exercise|practice)\b/.test(t)) return 45;
+    if (/\b(clean|laundry|cook|groceries|shopping|shop|tidy|vacuum)\b/.test(t)) return 30;
+    return 20;
+  }
+  function readTasks(text) {
+    const lower = " " + text.toLowerCase().replace(/[.!?]+/g, ",") + " ";
+    const m = lower.match(/\b(?:i (?:really )?(?:need|have|got|gotta|should|must|want|wanna|still need|still have) to|i gotta|i have|i need|i got|need to|have to|gotta|remind me to|remember to|todo|to do list is|my list is)\b[: ]+(.+)/);
+    if (!m) return [];
+    const parts = m[1].split(/,|;|\band then\b|\bthen\b|\balso\b|\bplus\b|\band (?:i )?(?:also )?(?:need|have|gotta|got|should) to\b|\band\b/)
+      .map(x => x.trim()).filter(x => x.length > 2);
+    const out = [];
+    for (let part of parts) {
+      let remindAt = "";
+      const tm = part.match(/\b(?:at|by|around)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m|p\.m)?\b/);
+      if (tm) {
+        let h = +tm[1], mi = +(tm[2] || 0); const ap = (tm[3] || "").replace(".", "");
+        if (ap === "pm" && h < 12) h += 12; else if (ap === "am" && h === 12) h = 0; else if (!ap && h < 8) h += 12;
+        if (h < 24 && mi < 60) remindAt = String(h).padStart(2, "0") + ":" + String(mi).padStart(2, "0");
+        part = part.replace(tm[0], " ");
+      }
+      let prev; do { prev = part; part = part.replace(/^(?:to|go|i|also|and|like|um|uh|then|so|ok|okay)\s+/, ""); } while (part !== prev);
+      if (/^the gym$/.test(part)) part = "go to the gym";
+      part = part.replace(/\b(?:today|tonight|asap|right now)\b/g, " ").replace(/\s+/g, " ").trim();
+      if (part.length < 3 || /^(it|that|this|stuff|things|something|anything|nothing)$/.test(part)) continue;
+      const title = part.charAt(0).toUpperCase() + part.slice(1, 80);
+      out.push({ type: "add", title, minutes: guessMinutes(part), priority: remindAt ? "now" : "soon", firstStep: "", remindAt });
+    }
+    return out.slice(0, 8);
+  }
+  const sameTask = (a, b) => a.toLowerCase().replace(/[^a-z0-9]/g, "") === b.toLowerCase().replace(/[^a-z0-9]/g, "");
+
   async function chatSend() {
     const input = $("dump"), status = $("status"), text = input.value.trim();
     status.classList.remove("err"); status.textContent = "";
@@ -1016,8 +1054,18 @@ Only add tasks they actually mention. Break big things into small tasks under 60
       const said = text.toLowerCase();
       out.actions = (Array.isArray(out.actions) ? out.actions : []).filter(a => !(a && a.type === "add" &&
         ((/clean my room/i.test(a.title || "") && !/room/.test(said)) || (/text my boss/i.test(a.title || "") && !/boss/.test(said)))));
-      const reply = String(out?.reply || "Okay!").slice(0, 500);
-      const startId = applyActions(Array.isArray(out?.actions) ? out.actions : []);
+      const reply0 = String(out?.reply || "Okay!").slice(0, 500);
+      let acts = Array.isArray(out?.actions) ? out.actions : [];
+      const fizzled = /my brain fizzled/.test(out.reply);
+      if (!acts.some(a => a && a.type === "add")) {
+        const found = readTasks(text).filter(f => !state.tasks.some(t => sameTask(t.title, f.title)));
+        if (found.length) {
+          acts = acts.concat(found);
+          if (fizzled || !/add|list|got it|on it/i.test(out.reply)) out.reply = found.length === 1 ? `Got it! I added "${found[0].title}". Want to start it now?` : `Got it! I added ${found.length} things to your list. Want to start with "${found[0].title}"?`;
+        }
+      }
+      const startId = applyActions(acts);
+      const reply = String(out.reply || reply0).slice(0, 500);
       typing = false;
       pushChat("bot", reply); say(reply);
       if (!speak(reply)) { talking(true); setTimeout(() => { talking(false); maybeListen(); }, 1400); }
@@ -1027,6 +1075,13 @@ Only add tasks they actually mention. Break big things into small tasks under 60
         if (t) setTimeout(() => startFocus(t), 2200);
       }
     } catch (e) {
+      const found = readTasks(text).filter(f => !state.tasks.some(t => sameTask(t.title, f.title)));
+      if (found.length && (engine || brainDownloaded())) {
+        typing = false; applyActions(found); persist(); renderTasks();
+        const r = found.length === 1 ? `Got it! I added "${found[0].title}".` : `Got it! I added ${found.length} things to your list.`;
+        pushChat("bot", r); say(r); speak(r);
+        return;
+      }
       typing = false; renderLog();
       status.classList.add("err");
       status.textContent = e?.code === "no_gpu" ? "This device can't run Bongo's brain. See the message above."
@@ -1654,6 +1709,7 @@ Only add tasks they actually mention. Break big things into small tasks under 60
     $("qa-input").value = ""; persist(); renderTasks();
     say(pick(["Got it!", "Added!", "On the list."]));
   });
+  $("app-version").textContent = "Version " + APP_VERSION;
   renderBrainState();
   if (!brainDownloaded()) $("keybox").hidden = false;
   else setTimeout(() => loadBrain().catch(() => {}), 1200);
